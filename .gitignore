@@ -1,0 +1,22 @@
+# 文件系统
+.DS_Store
+
+# 编译器
+.idea/**
+.vscode/**
+
+# 目标文件夹
+target/*
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
