@@ -4,17 +4,19 @@ import (
 	"context"
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/fhmq/hmq/plugins/bridge"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/consume"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/module"
 	"github.com/sirupsen/logrus"
 	"sync"
 )
 
 type pulsarBridgeMq struct {
-	pulsarClient pulsar.Client
-	server       Server
-	mutex        sync.RWMutex
-	producerMap  map[module.MqttSessionKey]pulsar.Producer
-	consumerMap  map[module.MqttSessionKey]pulsar.Consumer
+	pulsarClient              pulsar.Client
+	server                    Server
+	mutex                     sync.RWMutex
+	producerMap               map[module.MqttSessionKey]pulsar.Producer
+	consumerMap               map[module.MqttSessionKey]pulsar.Consumer
+	consumerRoutineContextMap map[module.MqttSessionKey]*consume.RoutineContext
 }
 
 func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
@@ -55,14 +57,19 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 			consumeOptions.Topic = consumeTopic
 			consumer, err := p.pulsarClient.Subscribe(consumeOptions)
 			if err != nil {
-				p.mutex.Lock()
 				p.consumerMap[mqttSessionKey] = consumer
-				p.mutex.Unlock()
+			} else {
+				routineContext := consume.StartConsumeRoutine(p, mqttSessionKey, consumer)
+				p.consumerRoutineContextMap[mqttSessionKey] = routineContext
 			}
 		}
 		p.mutex.Unlock()
 	} else if e.Action == bridge.Unsubscribe {
 		p.mutex.Lock()
+		routineContext := p.consumerRoutineContextMap[mqttSessionKey]
+		if routineContext != nil {
+			consume.StopConsumeRoutine(routineContext)
+		}
 		consumer := p.consumerMap[mqttSessionKey]
 		if consumer != nil {
 			consumer.Close()
