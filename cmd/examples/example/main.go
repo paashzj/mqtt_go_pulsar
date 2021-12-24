@@ -17,7 +17,7 @@ func main() {
 	config.PulsarConfig.HttpPort = *pulsarHttpPort
 	config.PulsarConfig.TcpPort = *pulsarTcpPort
 	e := &ExampleMqsarImpl{}
-	err := mqsar.Run(config, e)
+	err := mqsar.RunFront(config, e)
 	if err != nil {
 		panic(err)
 	}
