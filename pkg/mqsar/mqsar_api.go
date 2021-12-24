@@ -1,6 +1,7 @@
 package mqsar
 
 type Server interface {
-	MqttProduceTopic(username string, clientId string) (string, error)
-	MqttConsumeTopic(username string, clientId string) (string, error)
+	MqttAuth(username, password, clientId string) (bool, error)
+	MqttProduceTopic(username, clientId, topic string) (string, error)
+	MqttConsumeTopic(username, clientId, topic string) (string, error)
 }

@@ -18,6 +18,18 @@ type PulsarConfig struct {
 	TcpPort  int
 }
 
+func RunFront(config *Config, impl Server) (err error) {
+	err = Run(config, impl)
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+	for {
+		select {
+		case <-interrupt:
+			return nil
+		}
+	}
+}
+
 func Run(config *Config, impl Server) (err error) {
 	mqttConfig := &broker.Config{}
 	mqttConfig.Port = "1883"
@@ -32,12 +44,5 @@ func Run(config *Config, impl Server) (err error) {
 		return err
 	}
 	newBroker.Start()
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
-	for {
-		select {
-		case <-interrupt:
-			return nil
-		}
-	}
+	return nil
 }
