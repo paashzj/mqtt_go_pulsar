@@ -24,15 +24,19 @@ func setupPulsar() {
 		if time.Since(now).Minutes() > 3 {
 			panic("pulsar still not started")
 		}
-		resp, err := http.Get("http://localhost:8080")
+		resp, err := http.Get("http://localhost:8080/admin/v2/brokers/health")
 		if err != nil {
+			logrus.Error("connect pulsar error ")
 			once.Do(startPulsar)
-			break
+			time.Sleep(15 * time.Second)
+			continue
 		}
 		if resp.StatusCode == 200 {
+			logrus.Info("health check success")
 			break
 		}
-		time.Sleep(5 * time.Millisecond)
+		logrus.Info("resp code is ", resp.StatusCode)
+		time.Sleep(5 * time.Second)
 	}
 }
 
@@ -42,7 +46,6 @@ func startPulsar() {
 	if err != nil {
 		panic(err)
 	}
-	time.Sleep(30 * time.Second)
 }
 
 func startPulsarInternal() error {
@@ -57,7 +60,22 @@ func startPulsarInternal() error {
 		Env:          []string{"REMOTE_MODE=false"},
 		ExposedPorts: portSpecs,
 		Tty:          false,
-	}, nil, nil, nil, "mqtt-test-pulsar")
+	}, &container.HostConfig{
+		PortBindings: nat.PortMap{
+			"6650/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: "6650",
+				},
+			},
+			"8080/tcp": []nat.PortBinding{
+				{
+					HostIP:   "0.0.0.0",
+					HostPort: "8080",
+				},
+			},
+		},
+	}, nil, nil, "mqtt-test-pulsar")
 	if err != nil {
 		panic(err)
 	}
