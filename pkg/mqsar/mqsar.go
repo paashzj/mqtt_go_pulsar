@@ -20,13 +20,14 @@ type PulsarConfig struct {
 
 func RunFront(config *Config, impl Server) (err error) {
 	err = Run(config, impl)
+	if err != nil {
+		return
+	}
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 	for {
-		select {
-		case <-interrupt:
-			return nil
-		}
+		<-interrupt
+		return nil
 	}
 }
 

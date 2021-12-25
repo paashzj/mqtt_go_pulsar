@@ -54,6 +54,9 @@ func startPulsarInternal() error {
 		return err
 	}
 	portSpecs, bindings, err := nat.ParsePortSpecs([]string{"6650", "8080"})
+	if err != nil {
+		return err
+	}
 	logrus.Info("port binding is ", bindings)
 	resp, err := cli.ContainerCreate(context.TODO(), &container.Config{
 		Image:        "ttbb/pulsar:mate",
