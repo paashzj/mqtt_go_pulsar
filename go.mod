@@ -6,8 +6,10 @@ require (
 	github.com/apache/pulsar-client-go v0.7.0
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/docker/go-connections v0.4.0
+	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/fhmq/hmq v0.0.0-20211208101315-8d486c3a208f
 	github.com/sirupsen/logrus v1.8.1
+	github.com/stretchr/testify v1.7.0
 )
 
 require (
@@ -31,7 +33,6 @@ require (
 	github.com/eapache/go-resiliency v1.1.0 // indirect
 	github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21 // indirect
 	github.com/eapache/queue v1.1.0 // indirect
-	github.com/eclipse/paho.mqtt.golang v1.3.5 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.7.0 // indirect
 	github.com/go-playground/locales v0.13.0 // indirect
@@ -74,7 +75,6 @@ require (
 	github.com/rcrowley/go-metrics v0.0.0-20181016184325-3113b8401b8a // indirect
 	github.com/segmentio/fasthash v0.0.0-20180216231524-a72b379d632e // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	github.com/stretchr/testify v1.7.0 // indirect
 	github.com/tidwall/gjson v1.9.3 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
