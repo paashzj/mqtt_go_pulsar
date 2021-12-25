@@ -13,8 +13,8 @@ import (
 // - mqtt client connect
 func TestMqttConnect(t *testing.T) {
 	setupPulsar()
-	setupMqsar()
-	ops := mqtt.NewClientOptions().SetUsername("username").SetClientID("foo").AddBroker("tcp://localhost:1883")
+	port := setupMqsar()
+	ops := mqtt.NewClientOptions().SetUsername("username").SetClientID("foo").AddBroker(MqttConnAddr(port))
 	mqttCli := mqtt.NewClient(ops)
 	token := mqttCli.Connect()
 	token.Wait()

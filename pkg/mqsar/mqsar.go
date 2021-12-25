@@ -6,10 +6,16 @@ import (
 	"github.com/fhmq/hmq/broker"
 	"os"
 	"os/signal"
+	"strconv"
 )
 
 type Config struct {
+	MqttConfig   MqttConfig
 	PulsarConfig PulsarConfig
+}
+
+type MqttConfig struct {
+	Port int
 }
 
 type PulsarConfig struct {
@@ -33,10 +39,10 @@ func RunFront(config *Config, impl Server) (err error) {
 
 func Run(config *Config, impl Server) (err error) {
 	mqttConfig := &broker.Config{}
-	mqttConfig.Port = "1883"
+	mqttConfig.Port = strconv.Itoa(config.MqttConfig.Port)
 	clientOptions := pulsar.ClientOptions{}
 	clientOptions.URL = fmt.Sprintf("pulsar://%s:%d", config.PulsarConfig.Host, config.PulsarConfig.TcpPort)
-	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(clientOptions, impl)
+	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, clientOptions, impl)
 	if err != nil {
 		return
 	}

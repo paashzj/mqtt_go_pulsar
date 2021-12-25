@@ -18,7 +18,7 @@ import (
 // - pulsar consumer check message
 func TestMqttProducer(t *testing.T) {
 	setupPulsar()
-	setupMqsar()
+	port := setupMqsar()
 	pulsarClient, err := pulsar.NewClient(pulsar.ClientOptions{
 		URL: "pulsar://localhost:6650",
 	})
@@ -27,7 +27,7 @@ func TestMqttProducer(t *testing.T) {
 	}
 	mqttTopic := "mqtt-topic"
 	pulsarTopic := mqttProduceTopic(mqttTopic)
-	ops := mqtt.NewClientOptions().SetUsername("username").SetClientID("foo").AddBroker("tcp://localhost:1883")
+	ops := mqtt.NewClientOptions().SetUsername("username").SetClientID("foo").AddBroker(MqttConnAddr(port))
 	mqttCli := mqtt.NewClient(ops)
 	token := mqttCli.Connect()
 	token.Wait()
