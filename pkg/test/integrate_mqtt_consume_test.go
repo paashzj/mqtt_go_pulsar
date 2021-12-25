@@ -39,7 +39,7 @@ func TestMqttConsumer(t *testing.T) {
 		t.Error(err)
 		return
 	}
-	channel := make(chan string, 0)
+	channel := make(chan string)
 	token = mqttCli.Subscribe(mqttTopic, 0, func(client mqtt.Client, message mqtt.Message) {
 		logrus.Info("mqtt receive message ", message.MessageID())
 		channel <- string(message.Payload())

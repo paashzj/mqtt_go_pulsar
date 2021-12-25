@@ -27,11 +27,11 @@ func newPulsarBridgeMq(options pulsar.ClientOptions, impl Server) (bridge.Bridge
 		return nil, err
 	}
 	bridgeMq := &pulsarBridgeMq{pulsarClient: client, server: impl}
-	bridgeMq.sessionProducerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey, 0)
-	bridgeMq.sessionConsumerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey, 0)
-	bridgeMq.producerMap = make(map[module.MqttTopicKey]pulsar.Producer, 0)
-	bridgeMq.consumerMap = make(map[module.MqttTopicKey]pulsar.Consumer, 0)
-	bridgeMq.consumerRoutineContextMap = make(map[module.MqttTopicKey]*consume.RoutineContext, 0)
+	bridgeMq.sessionProducerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
+	bridgeMq.sessionConsumerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
+	bridgeMq.producerMap = make(map[module.MqttTopicKey]pulsar.Producer)
+	bridgeMq.consumerMap = make(map[module.MqttTopicKey]pulsar.Consumer)
+	bridgeMq.consumerRoutineContextMap = make(map[module.MqttTopicKey]*consume.RoutineContext)
 	return bridgeMq, nil
 }
 
