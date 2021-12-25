@@ -86,6 +86,7 @@ func startPulsarInternal() error {
 	return cli.ContainerStart(context.TODO(), resp.ID, types.ContainerStartOptions{})
 }
 
+//nolint
 func stopPulsar() {
 	logrus.Info("stop pulsar container")
 	err := stopPulsarInternal()
@@ -94,6 +95,7 @@ func stopPulsar() {
 	}
 }
 
+//nolint
 func stopPulsarInternal() error {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {

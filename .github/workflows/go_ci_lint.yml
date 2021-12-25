@@ -1,6 +1,8 @@
 name: go ci Lint
 on:
   pull_request:
+    branches:
+      - main
 jobs:
   golangci:
     name: lint

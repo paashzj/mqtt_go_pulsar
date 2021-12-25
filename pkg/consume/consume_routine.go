@@ -12,7 +12,7 @@ type RoutineContext struct {
 	quit chan bool
 }
 
-func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer) *RoutineContext {
+func StartConsumeRoutine(mqttAddr string, topicKey module.MqttTopicKey, consumer pulsar.Consumer) *RoutineContext {
 	quit := make(chan bool)
 	go func() {
 		for {
@@ -24,7 +24,7 @@ func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer)
 				if err != nil {
 					logrus.Error("receive error is ", err)
 				}
-				ops := mqtt.NewClientOptions().SetUsername("broker").SetClientID("broker").AddBroker("tcp://localhost:1883")
+				ops := mqtt.NewClientOptions().SetUsername("broker").SetClientID("broker").AddBroker(mqttAddr)
 				mqttCli := mqtt.NewClient(ops)
 				token := mqttCli.Connect()
 				token.Wait()

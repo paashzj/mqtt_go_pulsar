@@ -2,6 +2,7 @@ package mqsar
 
 import (
 	"context"
+	"fmt"
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/fhmq/hmq/plugins/bridge"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/consume"
@@ -11,6 +12,7 @@ import (
 )
 
 type pulsarBridgeMq struct {
+	mqttConfig                MqttConfig
 	pulsarClient              pulsar.Client
 	server                    Server
 	mutex                     sync.RWMutex
@@ -21,12 +23,12 @@ type pulsarBridgeMq struct {
 	consumerRoutineContextMap map[module.MqttTopicKey]*consume.RoutineContext
 }
 
-func newPulsarBridgeMq(options pulsar.ClientOptions, impl Server) (bridge.BridgeMQ, error) {
+func newPulsarBridgeMq(config MqttConfig, options pulsar.ClientOptions, impl Server) (bridge.BridgeMQ, error) {
 	client, err := pulsar.NewClient(options)
 	if err != nil {
 		return nil, err
 	}
-	bridgeMq := &pulsarBridgeMq{pulsarClient: client, server: impl}
+	bridgeMq := &pulsarBridgeMq{mqttConfig: config, pulsarClient: client, server: impl}
 	bridgeMq.sessionProducerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.sessionConsumerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.producerMap = make(map[module.MqttTopicKey]pulsar.Producer)
@@ -73,7 +75,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				return nil
 			} else {
 				p.consumerMap[mqttTopicKey] = consumer
-				routineContext := consume.StartConsumeRoutine(mqttTopicKey, consumer)
+				routineContext := consume.StartConsumeRoutine(fmt.Sprintf("tcp://localhost:%d", p.mqttConfig.Port), mqttTopicKey, consumer)
 				p.consumerRoutineContextMap[mqttTopicKey] = routineContext
 			}
 		}
