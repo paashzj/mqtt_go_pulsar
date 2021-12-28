@@ -43,6 +43,7 @@ func Run(config *Config, impl Server) (err error) {
 	clientOptions := pulsar.ClientOptions{}
 	clientOptions.URL = fmt.Sprintf("pulsar://%s:%d", config.PulsarConfig.Host, config.PulsarConfig.TcpPort)
 	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, clientOptions, impl)
+	mqttConfig.Plugin.Auth = newPulsarAuthMq(impl)
 	if err != nil {
 		return
 	}
