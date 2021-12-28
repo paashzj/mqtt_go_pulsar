@@ -20,3 +20,19 @@ func TestMqttConnect(t *testing.T) {
 	token.Wait()
 	assert.True(t, mqttCli.IsConnected())
 }
+
+// TestMqttUnConnected steps:
+// - create pulsar
+// - create mqsar
+// - create mqtt client
+// - mqtt client connect
+// - mqtt client check connection
+func TestMqttUnConnected(t *testing.T) {
+	setupPulsar()
+	port := setupMqsar()
+	ops := mqtt.NewClientOptions().SetUsername("username").SetPassword("wrong_password").SetClientID("foo").AddBroker(MqttConnAddr(port))
+	mqttCli := mqtt.NewClient(ops)
+	token := mqttCli.Connect()
+	token.Wait()
+	assert.True(t, !mqttCli.IsConnected())
+}
