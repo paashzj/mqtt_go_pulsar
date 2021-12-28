@@ -93,21 +93,26 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 			MqttSessionKey: mqttSessionKey,
 			Topic:          e.Topic,
 		}
-		produceTopic, err := p.server.MqttProduceTopic(e.Username, e.ClientID, e.Topic)
-		if err != nil {
-			logrus.Error("get produce topic failed ", err)
-			return nil
-		} else {
-			producerOptions := pulsar.ProducerOptions{}
-			producerOptions.Topic = produceTopic
-			producer, err := p.pulsarClient.CreateProducer(producerOptions)
+		p.mutex.RLock()
+		aux := p.producerMap[mqttTopicKey]
+		p.mutex.RUnlock()
+		if aux == nil {
+			produceTopic, err := p.server.MqttProduceTopic(e.Username, e.ClientID, e.Topic)
 			if err != nil {
-				logrus.Error("create produce failed ", err)
+				logrus.Error("get produce topic failed ", err)
 				return nil
 			} else {
-				p.mutex.Lock()
-				p.producerMap[mqttTopicKey] = producer
-				p.mutex.Unlock()
+				producerOptions := pulsar.ProducerOptions{}
+				producerOptions.Topic = produceTopic
+				producer, err := p.pulsarClient.CreateProducer(producerOptions)
+				if err != nil {
+					logrus.Error("create produce failed ", err)
+					return nil
+				} else {
+					p.mutex.Lock()
+					p.producerMap[mqttTopicKey] = producer
+					p.mutex.Unlock()
+				}
 			}
 		}
 		p.mutex.RLock()
