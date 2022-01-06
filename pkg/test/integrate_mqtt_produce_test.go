@@ -48,3 +48,36 @@ func TestMqttProducer(t *testing.T) {
 	}
 	assert.Equal(t, "mqtt-msg", string(message.Payload()))
 }
+
+func TestMqttProducerByBrokerName(t *testing.T) {
+	setupPulsar()
+	port := setupMqsar()
+	pulsarClient, err := pulsar.NewClient(pulsar.ClientOptions{
+		URL: "pulsar://localhost:6650",
+	})
+	if err != nil {
+		panic(err)
+	}
+	mqttTopic := "mqtt-topic"
+	pulsarTopic := mqttProduceTopic(mqttTopic)
+	ops := mqtt.NewClientOptions().SetUsername("broker").SetClientID("foo").AddBroker(MqttConnAddr(port))
+	mqttCli := mqtt.NewClient(ops)
+	token := mqttCli.Connect()
+	token.Wait()
+	consumer, err := pulsarClient.Subscribe(pulsar.ConsumerOptions{
+		Topic:            pulsarTopic,
+		SubscriptionName: "mqtt-produce-broker_name-test",
+	})
+	if err != nil {
+		panic(err)
+	}
+	token = mqttCli.Publish(mqttTopic, 0, true, "mqtt-msg")
+	token.Wait()
+	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancel()
+	message, err := consumer.Receive(ctx)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, "mqtt-msg", string(message.Payload()))
+}

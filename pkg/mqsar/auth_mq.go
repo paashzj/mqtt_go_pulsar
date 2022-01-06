@@ -17,6 +17,9 @@ func newPulsarAuthMq(server Server) auth.Auth {
 }
 
 func (auth *pulsarAuthMq) CheckACL(action, clientID, username, ip, topic string) bool {
+	if username == "broker" {
+		return true
+	}
 	switch action {
 	case broker.PUB:
 		_, err := auth.server.MqttProduceTopic(username, clientID, topic)
@@ -33,6 +36,9 @@ func (auth *pulsarAuthMq) CheckACL(action, clientID, username, ip, topic string)
 }
 
 func (auth *pulsarAuthMq) CheckConnect(clientID, username, password string) bool {
+	if username == "broker" {
+		return true
+	}
 	mqttAuth, err := auth.server.MqttAuth(username, password, clientID)
 	if err != nil {
 		logrus.Error("check mqtt authentication failed ", err)
