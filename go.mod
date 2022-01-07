@@ -55,7 +55,6 @@ require (
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/keybase/go-keychain v0.0.0-20190712205309-48d3d31d256d // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
-	github.com/kr/text v0.2.0 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/linkedin/goavro/v2 v2.9.8 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
@@ -65,7 +64,6 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/mtibben/percent v0.2.1 // indirect
-	github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
@@ -96,11 +94,6 @@ require (
 	google.golang.org/genproto v0.0.0-20211223182754-3ac035c7e7cb // indirect
 	google.golang.org/grpc v1.43.0 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
-	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
-	gopkg.in/jcmturner/aescts.v1 v1.0.1 // indirect
-	gopkg.in/jcmturner/dnsutils.v1 v1.0.1 // indirect
-	gopkg.in/jcmturner/gokrb5.v7 v7.5.0 // indirect
-	gopkg.in/jcmturner/rpc.v1 v1.1.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
