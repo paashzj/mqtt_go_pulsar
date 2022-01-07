@@ -13,7 +13,7 @@ import (
 // - mqtt client connect
 func TestMqttConnect(t *testing.T) {
 	setupPulsar()
-	port := setupMqsar()
+	_, port := setupMqsar()
 	ops := mqtt.NewClientOptions().SetUsername("username").SetClientID("foo").AddBroker(MqttConnAddr(port))
 	mqttCli := mqtt.NewClient(ops)
 	token := mqttCli.Connect()
@@ -29,7 +29,7 @@ func TestMqttConnect(t *testing.T) {
 // - mqtt client check connection
 func TestMqttUnConnected(t *testing.T) {
 	setupPulsar()
-	port := setupMqsar()
+	_, port := setupMqsar()
 	ops := mqtt.NewClientOptions().SetUsername("username").SetPassword("wrong_password").SetClientID("foo").AddBroker(MqttConnAddr(port))
 	mqttCli := mqtt.NewClient(ops)
 	token := mqttCli.Connect()

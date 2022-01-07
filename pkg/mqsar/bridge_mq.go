@@ -2,7 +2,6 @@ package mqsar
 
 import (
 	"context"
-	"fmt"
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/fhmq/hmq/plugins/bridge"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/consume"
@@ -75,7 +74,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				return nil
 			} else {
 				p.consumerMap[mqttTopicKey] = consumer
-				routineContext := consume.StartConsumeRoutine(fmt.Sprintf("tcp://localhost:%d", p.mqttConfig.Port), mqttTopicKey, consumer)
+				routineContext := consume.StartConsumeRoutine(mqttTopicKey, consumer)
 				p.consumerRoutineContextMap[mqttTopicKey] = routineContext
 			}
 		}
