@@ -19,7 +19,7 @@ import (
 // - mqtt consumer check message
 func TestMqttConsumer(t *testing.T) {
 	setupPulsar()
-	port := setupMqsar()
+	_, port := setupMqsar()
 	pulsarClient, err := pulsar.NewClient(pulsar.ClientOptions{
 		URL: "pulsar://localhost:6650",
 	})

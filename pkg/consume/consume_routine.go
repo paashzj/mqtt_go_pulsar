@@ -3,8 +3,10 @@ package consume
 import (
 	"context"
 	"github.com/apache/pulsar-client-go/pulsar"
-	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/eclipse/paho.mqtt.golang/packets"
+	"github.com/fhmq/hmq/broker"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/module"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/service"
 	"github.com/sirupsen/logrus"
 )
 
@@ -12,7 +14,7 @@ type RoutineContext struct {
 	quit chan bool
 }
 
-func StartConsumeRoutine(mqttAddr string, topicKey module.MqttTopicKey, consumer pulsar.Consumer) *RoutineContext {
+func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer) *RoutineContext {
 	quit := make(chan bool)
 	go func() {
 		for {
@@ -23,19 +25,17 @@ func StartConsumeRoutine(mqttAddr string, topicKey module.MqttTopicKey, consumer
 				receiveMsg, err := consumer.Receive(context.TODO())
 				if err != nil {
 					logrus.Error("receive error is ", err)
+					return
 				}
-				ops := mqtt.NewClientOptions().SetUsername("broker").SetClientID("broker").AddBroker(mqttAddr)
-				mqttCli := mqtt.NewClient(ops)
-				token := mqttCli.Connect()
-				token.Wait()
-				token = mqttCli.Publish(topicKey.Topic, 0, true, receiveMsg.Payload())
-				token.Wait()
-				mqttCli.Disconnect(0)
-				if err != nil {
-					logrus.Error("receive error is ", err)
-				} else {
-					consumer.Ack(receiveMsg)
-				}
+				mqttBroker := service.GetMqttBroker()
+				publishPacket := packets.NewControlPacket(packets.Publish).(*packets.PublishPacket)
+				publishPacket.TopicName = topicKey.Topic
+				publishPacket.Payload = receiveMsg.Payload()
+				publishPacket.Qos = broker.QosAtLeastOnce
+				publishPacket.Retain = false
+				publishPacket.Dup = false
+				mqttBroker.PublishMessage(publishPacket)
+				consumer.Ack(receiveMsg)
 			}
 		}
 	}()

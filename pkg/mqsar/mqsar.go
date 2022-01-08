@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/fhmq/hmq/broker"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/service"
 	"os"
 	"os/signal"
 	"strconv"
@@ -24,8 +25,16 @@ type PulsarConfig struct {
 	TcpPort  int
 }
 
+type Broker struct {
+	mqttBroker *broker.Broker
+}
+
+func (b *Broker) DisConnClientByClientId(clientId string) {
+	b.mqttBroker.DisConnClientByClientId(clientId)
+}
+
 func RunFront(config *Config, impl Server) (err error) {
-	err = Run(config, impl)
+	_, err = Run(config, impl)
 	if err != nil {
 		return
 	}
@@ -37,7 +46,7 @@ func RunFront(config *Config, impl Server) (err error) {
 	}
 }
 
-func Run(config *Config, impl Server) (err error) {
+func Run(config *Config, impl Server) (b *Broker, err error) {
 	mqttConfig := &broker.Config{}
 	mqttConfig.Port = strconv.Itoa(config.MqttConfig.Port)
 	clientOptions := pulsar.ClientOptions{}
@@ -45,12 +54,13 @@ func Run(config *Config, impl Server) (err error) {
 	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, clientOptions, impl)
 	mqttConfig.Plugin.Auth = newPulsarAuthMq(impl)
 	if err != nil {
-		return
+		return nil, err
 	}
 	newBroker, err := broker.NewBroker(mqttConfig)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	newBroker.Start()
-	return nil
+	service.SetMqttBroker(newBroker)
+	return &Broker{mqttBroker: newBroker}, nil
 }
