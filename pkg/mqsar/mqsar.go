@@ -24,6 +24,14 @@ type PulsarConfig struct {
 	TcpPort  int
 }
 
+type Broker struct {
+	mqttBroker *broker.Broker
+}
+
+func (m *Broker) DisConnectByClientId(clientId string) {
+	m.mqttBroker.DisConnClientByClientId(clientId)
+}
+
 func RunFront(config *Config, impl Server) (err error) {
 	err = Run(config, impl)
 	if err != nil {
@@ -51,6 +59,8 @@ func Run(config *Config, impl Server) (err error) {
 	if err != nil {
 		return err
 	}
+	b := &Broker{}
+	b.mqttBroker = newBroker
 	newBroker.Start()
 	return nil
 }
