@@ -76,6 +76,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				p.consumerMap[mqttTopicKey] = consumer
 				routineContext := consume.StartConsumeRoutine(mqttTopicKey, consumer)
 				p.consumerRoutineContextMap[mqttTopicKey] = routineContext
+				p.sessionConsumerMap[mqttSessionKey] = append(p.sessionConsumerMap[mqttSessionKey], mqttTopicKey)
 			}
 		}
 		p.mutex.Unlock()
@@ -114,6 +115,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				} else {
 					p.mutex.Lock()
 					p.producerMap[mqttTopicKey] = producer
+					p.sessionProducerMap[mqttSessionKey] = append(p.sessionProducerMap[mqttSessionKey], mqttTopicKey)
 					p.mutex.Unlock()
 				}
 			}
