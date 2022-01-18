@@ -51,7 +51,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 		p.mutex.Unlock()
 	} else if e.Action == bridge.Disconnect {
 		p.mutex.Lock()
-		p.closeSession(mqttSessionKey)
+		p.closeSession(mqttSessionKey, e.Topic)
 		p.mutex.Unlock()
 	} else if e.Action == bridge.Subscribe {
 		mqttTopicKey := module.MqttTopicKey{
@@ -80,6 +80,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 		}
 		p.mutex.Unlock()
 	} else if e.Action == bridge.Unsubscribe {
+		logrus.Infof("begin to unsubscribe mqtt topic: %s", e.Topic)
 		mqttTopicKey := module.MqttTopicKey{
 			MqttSessionKey: mqttSessionKey,
 			Topic:          e.Topic,
@@ -136,7 +137,8 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 	return nil
 }
 
-func (p *pulsarBridgeMq) closeSession(mqttSessionKey module.MqttSessionKey) {
+func (p *pulsarBridgeMq) closeSession(mqttSessionKey module.MqttSessionKey, topic string) {
+	logrus.Infof("begin to close mqtt session. user: %s, topic: %s", mqttSessionKey.Username, topic)
 	producers := p.sessionProducerMap[mqttSessionKey]
 	for _, producer := range producers {
 		p.closeProducer(producer)
@@ -166,6 +168,7 @@ func (p *pulsarBridgeMq) closeConsumer(mqttTopicKey module.MqttTopicKey) {
 	p.consumerRoutineContextMap[mqttTopicKey] = nil
 	consumer := p.consumerMap[mqttTopicKey]
 	if consumer != nil {
+		logrus.Infof("begin to close consumer. topic: %s", mqttTopicKey.Topic)
 		consumer.Close()
 	}
 	p.consumerMap[mqttTopicKey] = nil
