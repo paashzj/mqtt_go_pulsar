@@ -102,6 +102,8 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				return nil
 			} else {
 				producerOptions := pulsar.ProducerOptions{}
+				producerOptions.DisableBatching = true
+				producerOptions.DisableBlockIfQueueFull = true
 				producerOptions.Topic = produceTopic
 				producer, err := p.pulsarClient.CreateProducer(producerOptions)
 				if err != nil {
@@ -119,14 +121,12 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 		if producer != nil {
 			producerMessage := pulsar.ProducerMessage{}
 			producerMessage.Payload = []byte(e.Payload)
-			go func() {
-				messageID, err := producer.Send(context.TODO(), &producerMessage)
-				if err != nil {
-					logrus.Error("Send pulsar error ", err)
-				} else {
-					logrus.Info("Send pulsar success ", messageID)
-				}
-			}()
+			messageID, err := producer.Send(context.TODO(), &producerMessage)
+			if err != nil {
+				logrus.Error("Send pulsar error ", err)
+			} else {
+				logrus.Info("Send pulsar success ", messageID)
+			}
 		}
 		p.mutex.RUnlock()
 	} else {
