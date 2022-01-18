@@ -105,6 +105,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				producerOptions.DisableBatching = true
 				producerOptions.DisableBlockIfQueueFull = true
 				producerOptions.Topic = produceTopic
+				logrus.Infof("begin to create producer. mqttTopic : %s, topic : %s", e.Topic, produceTopic)
 				producer, err := p.pulsarClient.CreateProducer(producerOptions)
 				if err != nil {
 					logrus.Error("create produce failed ", err)
@@ -151,6 +152,7 @@ func (p *pulsarBridgeMq) closeSession(mqttSessionKey module.MqttSessionKey) {
 func (p *pulsarBridgeMq) closeProducer(mqttTopicKey module.MqttTopicKey) {
 	producer := p.producerMap[mqttTopicKey]
 	if producer != nil {
+		logrus.Infof("begin to close producer. mqttTopic: %s, topic : %s", mqttTopicKey.Topic, producer.Topic())
 		producer.Close()
 	}
 	p.producerMap[mqttTopicKey] = nil
