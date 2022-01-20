@@ -26,14 +26,7 @@ import (
 	"time"
 )
 
-// TestMqttAclCheck steps:
-// - create pulsar
-// - create mqsar
-// - create pulsar consumer
-// - create mqtt producer
-// - mqtt produce message
-// - pulsar consumer check message
-func TestMqttAclCheck(t *testing.T) {
+func TestMqttProduceQos0(t *testing.T) {
 	setupPulsar()
 	_, port := setupMqsar()
 	pulsarClient, err := pulsar.NewClient(pulsar.ClientOptions{
@@ -42,7 +35,7 @@ func TestMqttAclCheck(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	mqttTopic := "wrong-mqtt-topic"
+	mqttTopic := "mqtt-qos0-topic"
 	pulsarTopic := mqttProduceTopic(mqttTopic)
 	ops := mqtt.NewClientOptions().SetUsername("username").SetClientID("foo").AddBroker(MqttConnAddr(port))
 	mqttCli := mqtt.NewClient(ops)
@@ -50,7 +43,7 @@ func TestMqttAclCheck(t *testing.T) {
 	token.Wait()
 	consumer, err := pulsarClient.Subscribe(pulsar.ConsumerOptions{
 		Topic:            pulsarTopic,
-		SubscriptionName: "mqtt-produce-test",
+		SubscriptionName: "mqtt-produce-qos0-test",
 	})
 	if err != nil {
 		panic(err)
@@ -59,6 +52,9 @@ func TestMqttAclCheck(t *testing.T) {
 	token.Wait()
 	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
 	defer cancel()
-	message, _ := consumer.Receive(ctx)
-	assert.Nil(t, message)
+	message, err := consumer.Receive(ctx)
+	if err != nil {
+		t.Error(err)
+	}
+	assert.Equal(t, "mqtt-msg", string(message.Payload()))
 }
