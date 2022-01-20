@@ -37,9 +37,6 @@ func newPulsarBridgeMq(config MqttConfig, options pulsar.ClientOptions, impl Ser
 }
 
 func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
-	if e.Username == "broker" {
-		return nil
-	}
 	mqttSessionKey := module.MqttSessionKey{
 		Username: e.Username,
 		ClientId: e.ClientID,
@@ -126,11 +123,21 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 		if producer != nil {
 			producerMessage := pulsar.ProducerMessage{}
 			producerMessage.Payload = []byte(e.Payload)
-			messageID, err := producer.Send(context.TODO(), &producerMessage)
-			if err != nil {
-				logrus.Error("Send pulsar error ", err)
+			if p.mqttConfig.Qos1NoWaitReply {
+				producer.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
+					if err != nil {
+						logrus.Error("Send pulsar error ", err)
+					} else {
+						logrus.Info("Send pulsar success ", id)
+					}
+				})
 			} else {
-				logrus.Info("Send pulsar success ", messageID)
+				messageID, err := producer.Send(context.TODO(), &producerMessage)
+				if err != nil {
+					logrus.Error("Send pulsar error ", err)
+				} else {
+					logrus.Info("Send pulsar success ", messageID)
+				}
 			}
 		}
 		p.mutex.RUnlock()

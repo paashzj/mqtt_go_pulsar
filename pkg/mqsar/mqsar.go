@@ -16,7 +16,9 @@ type Config struct {
 }
 
 type MqttConfig struct {
-	Port int
+	Host            string
+	Port            int
+	Qos1NoWaitReply bool
 }
 
 type PulsarConfig struct {
@@ -48,6 +50,7 @@ func RunFront(config *Config, impl Server) (err error) {
 
 func Run(config *Config, impl Server) (b *Broker, err error) {
 	mqttConfig := &broker.Config{}
+	mqttConfig.Host = config.MqttConfig.Host
 	mqttConfig.Port = strconv.Itoa(config.MqttConfig.Port)
 	clientOptions := pulsar.ClientOptions{}
 	clientOptions.URL = fmt.Sprintf("pulsar://%s:%d", config.PulsarConfig.Host, config.PulsarConfig.TcpPort)
