@@ -22,9 +22,12 @@ import (
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/fhmq/hmq/broker"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/service"
+	"github.com/panjf2000/ants/v2"
+	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"strconv"
+	"time"
 )
 
 type Config struct {
@@ -36,6 +39,9 @@ type MqttConfig struct {
 	Host            string
 	Port            int
 	Qos1NoWaitReply bool
+	DisableBatching bool
+	SendTimeout     time.Duration
+	PoolSize        int
 }
 
 type PulsarConfig struct {
@@ -71,7 +77,13 @@ func Run(config *Config, impl Server) (b *Broker, err error) {
 	mqttConfig.Port = strconv.Itoa(config.MqttConfig.Port)
 	clientOptions := pulsar.ClientOptions{}
 	clientOptions.URL = fmt.Sprintf("pulsar://%s:%d", config.PulsarConfig.Host, config.PulsarConfig.TcpPort)
-	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, clientOptions, impl)
+	size := config.MqttConfig.PoolSize
+	pool, err := ants.NewPool(size)
+	if err != nil {
+		logrus.Errorf("init pool faild. err: %s", err)
+		panic(err)
+	}
+	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, clientOptions, impl, pool)
 	mqttConfig.Plugin.Auth = newPulsarAuthMq(impl)
 	if err != nil {
 		return nil, err

@@ -23,6 +23,7 @@ import (
 	"github.com/fhmq/hmq/plugins/bridge"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/consume"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/module"
+	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
 	"sync"
 )
@@ -32,6 +33,7 @@ type pulsarBridgeMq struct {
 	pulsarClient              pulsar.Client
 	server                    Server
 	mutex                     sync.RWMutex
+	pool                      *ants.Pool
 	sessionProducerMap        map[module.MqttSessionKey][]module.MqttTopicKey
 	sessionConsumerMap        map[module.MqttSessionKey][]module.MqttTopicKey
 	producerMap               map[module.MqttTopicKey]pulsar.Producer
@@ -39,12 +41,12 @@ type pulsarBridgeMq struct {
 	consumerRoutineContextMap map[module.MqttTopicKey]*consume.RoutineContext
 }
 
-func newPulsarBridgeMq(config MqttConfig, options pulsar.ClientOptions, impl Server) (bridge.BridgeMQ, error) {
+func newPulsarBridgeMq(config MqttConfig, options pulsar.ClientOptions, impl Server, pool *ants.Pool) (bridge.BridgeMQ, error) {
 	client, err := pulsar.NewClient(options)
 	if err != nil {
 		return nil, err
 	}
-	bridgeMq := &pulsarBridgeMq{mqttConfig: config, pulsarClient: client, server: impl}
+	bridgeMq := &pulsarBridgeMq{mqttConfig: config, pulsarClient: client, server: impl, pool: pool}
 	bridgeMq.sessionProducerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.sessionConsumerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.producerMap = make(map[module.MqttTopicKey]pulsar.Producer)
@@ -119,7 +121,8 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				return nil
 			} else {
 				producerOptions := pulsar.ProducerOptions{}
-				producerOptions.DisableBatching = true
+				producerOptions.DisableBatching = p.mqttConfig.DisableBatching
+				producerOptions.SendTimeout = p.mqttConfig.SendTimeout
 				producerOptions.DisableBlockIfQueueFull = true
 				producerOptions.Topic = produceTopic
 				logrus.Infof("begin to create producer. mqttTopic : %s, topic : %s", e.Topic, produceTopic)
@@ -133,6 +136,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 					p.sessionProducerMap[mqttSessionKey] = append(p.sessionProducerMap[mqttSessionKey], mqttTopicKey)
 					p.mutex.Unlock()
 				}
+
 			}
 		}
 		p.mutex.RLock()
@@ -141,13 +145,19 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 			producerMessage := pulsar.ProducerMessage{}
 			producerMessage.Payload = []byte(e.Payload)
 			if p.mqttConfig.Qos1NoWaitReply {
-				producer.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
-					if err != nil {
-						logrus.Error("Send pulsar error ", err)
-					} else {
-						logrus.Info("Send pulsar success ", id)
-					}
+				defer p.pool.Release()
+				err := p.pool.Submit(func() {
+					producer.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
+						if err != nil {
+							logrus.Error("Send pulsar error ", err)
+						} else {
+							logrus.Info("Send pulsar success ", id)
+						}
+					})
 				})
+				if err != nil {
+					logrus.Errorf("submit send pulsar task failed. err: %s", err)
+				}
 			} else {
 				messageID, err := producer.Send(context.TODO(), &producerMessage)
 				if err != nil {
