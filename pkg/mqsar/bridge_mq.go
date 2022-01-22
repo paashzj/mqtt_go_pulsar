@@ -145,7 +145,6 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 			producerMessage := pulsar.ProducerMessage{}
 			producerMessage.Payload = []byte(e.Payload)
 			if p.mqttConfig.Qos1NoWaitReply {
-				defer p.pool.Release()
 				err := p.pool.Submit(func() {
 					producer.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
 						if err != nil {
