@@ -135,38 +135,34 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 					p.producerMap[mqttTopicKey] = producer
 					p.sessionProducerMap[mqttSessionKey] = append(p.sessionProducerMap[mqttSessionKey], mqttTopicKey)
 					p.mutex.Unlock()
+					aux = producer
 				}
 
 			}
 		}
-		p.mutex.RLock()
-		producer := p.producerMap[mqttTopicKey]
-		if producer != nil {
-			producerMessage := pulsar.ProducerMessage{}
-			producerMessage.Payload = []byte(e.Payload)
-			if p.mqttConfig.Qos1NoWaitReply {
-				err := p.pool.Submit(func() {
-					producer.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
-						if err != nil {
-							logrus.Error("Send pulsar error ", err)
-						} else {
-							logrus.Info("Send pulsar success ", id)
-						}
-					})
+		producerMessage := pulsar.ProducerMessage{}
+		producerMessage.Payload = []byte(e.Payload)
+		if p.mqttConfig.Qos1NoWaitReply {
+			err := p.pool.Submit(func() {
+				aux.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
+					if err != nil {
+						logrus.Error("Send pulsar error ", err)
+					} else {
+						logrus.Info("Send pulsar success ", id)
+					}
 				})
-				if err != nil {
-					logrus.Errorf("submit send pulsar task failed. err: %s", err)
-				}
+			})
+			if err != nil {
+				logrus.Errorf("submit send pulsar task failed. err: %s", err)
+			}
+		} else {
+			messageID, err := aux.Send(context.TODO(), &producerMessage)
+			if err != nil {
+				logrus.Error("Send pulsar error ", err)
 			} else {
-				messageID, err := producer.Send(context.TODO(), &producerMessage)
-				if err != nil {
-					logrus.Error("Send pulsar error ", err)
-				} else {
-					logrus.Info("Send pulsar success ", messageID)
-				}
+				logrus.Info("Send pulsar success ", messageID)
 			}
 		}
-		p.mutex.RUnlock()
 	} else {
 		logrus.Info("Unsupported action ", e.Action)
 	}
