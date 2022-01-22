@@ -36,12 +36,12 @@ type Config struct {
 }
 
 type MqttConfig struct {
-	Host            string
-	Port            int
-	Qos1NoWaitReply bool
-	DisableBatching bool
-	SendTimeout     time.Duration
-	PoolSize        int
+	Host                string
+	Port                int
+	Qos1NoWaitReply     bool
+	DisableBatching     bool
+	SendTimeout         time.Duration
+	SendRoutinePoolSize int
 }
 
 type PulsarConfig struct {
@@ -77,7 +77,7 @@ func Run(config *Config, impl Server) (b *Broker, err error) {
 	mqttConfig.Port = strconv.Itoa(config.MqttConfig.Port)
 	clientOptions := pulsar.ClientOptions{}
 	clientOptions.URL = fmt.Sprintf("pulsar://%s:%d", config.PulsarConfig.Host, config.PulsarConfig.TcpPort)
-	size := config.MqttConfig.PoolSize
+	size := config.MqttConfig.SendRoutinePoolSize
 	pool, err := ants.NewPool(size)
 	if err != nil {
 		logrus.Errorf("init pool faild. err: %s", err)
