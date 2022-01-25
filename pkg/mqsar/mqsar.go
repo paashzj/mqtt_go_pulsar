@@ -21,8 +21,12 @@ import (
 	"fmt"
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/fhmq/hmq/broker"
+	"github.com/gin-contrib/pprof"
+	"github.com/gin-gonic/gin"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/metrics"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/service"
 	"github.com/panjf2000/ants/v2"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
@@ -32,6 +36,7 @@ import (
 
 type Config struct {
 	MqttConfig   MqttConfig
+	HttpConfig   HttpConfig
 	PulsarConfig PulsarConfig
 }
 
@@ -42,6 +47,13 @@ type MqttConfig struct {
 	DisableBatching     bool
 	SendTimeout         time.Duration
 	SendRoutinePoolSize int
+}
+
+type HttpConfig struct {
+	Disable      bool
+	Host         string
+	Port         int
+	DisablePprof bool
 }
 
 type PulsarConfig struct {
@@ -72,6 +84,22 @@ func RunFront(config *Config, impl Server) (err error) {
 }
 
 func Run(config *Config, impl Server) (b *Broker, err error) {
+	// gin http server
+	if !config.HttpConfig.Disable {
+		metrics.Init()
+		router := gin.Default()
+		if !config.HttpConfig.DisablePprof {
+			pprof.Register(router)
+		}
+		router.GET("/metrics", prometheusHandler())
+		go func() {
+			err := router.Run(fmt.Sprintf("%s:%d", config.HttpConfig.Host, config.HttpConfig.Port))
+			if err != nil {
+				logrus.Error("run http server error ", err)
+			}
+		}()
+	}
+	// mqtt broker
 	mqttConfig := &broker.Config{}
 	mqttConfig.Host = config.MqttConfig.Host
 	mqttConfig.Port = strconv.Itoa(config.MqttConfig.Port)
@@ -95,4 +123,11 @@ func Run(config *Config, impl Server) (b *Broker, err error) {
 	newBroker.Start()
 	service.SetMqttBroker(newBroker)
 	return &Broker{mqttBroker: newBroker}, nil
+}
+
+func prometheusHandler() gin.HandlerFunc {
+	h := promhttp.Handler()
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
 }

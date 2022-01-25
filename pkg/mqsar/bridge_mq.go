@@ -22,10 +22,12 @@ import (
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/fhmq/hmq/plugins/bridge"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/consume"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/metrics"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/module"
 	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
 	"sync"
+	"time"
 )
 
 type pulsarBridgeMq struct {
@@ -142,14 +144,18 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 		}
 		producerMessage := pulsar.ProducerMessage{}
 		producerMessage.Payload = []byte(e.Payload)
+		startTime := time.Now()
 		if p.mqttConfig.Qos1NoWaitReply {
 			err := p.pool.Submit(func() {
 				aux.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
 					if err != nil {
+						metrics.PulsarSendFailCount.Add(1)
 						logrus.Error("Send pulsar error ", err)
 					} else {
+						metrics.PulsarSendSuccessCount.Add(1)
 						logrus.Info("Send pulsar success ", id)
 					}
+					metrics.PulsarSendLatency.Observe(float64(time.Since(startTime).Milliseconds()))
 				})
 			})
 			if err != nil {
@@ -158,10 +164,13 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 		} else {
 			messageID, err := aux.Send(context.TODO(), &producerMessage)
 			if err != nil {
+				metrics.PulsarSendFailCount.Add(1)
 				logrus.Error("Send pulsar error ", err)
 			} else {
+				metrics.PulsarSendSuccessCount.Add(1)
 				logrus.Info("Send pulsar success ", messageID)
 			}
+			metrics.PulsarSendLatency.Observe(float64(time.Since(startTime).Milliseconds()))
 		}
 	} else {
 		logrus.Info("Unsupported action ", e.Action)

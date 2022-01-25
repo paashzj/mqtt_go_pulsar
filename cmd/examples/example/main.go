@@ -27,6 +27,11 @@ var (
 )
 
 var (
+	httpHost = flag.String("http_host", "localhost", "http listen host")
+	httpPort = flag.Int("http_port", 21001, "http listen port")
+)
+
+var (
 	pulsarHost     = flag.String("pulsar_host", "localhost", "pulsar host")
 	pulsarHttpPort = flag.Int("pulsar_http_port", 8080, "pulsar http port")
 	pulsarTcpPort  = flag.Int("pulsar_tcp_port", 6650, "pulsar tcp port")
@@ -37,6 +42,10 @@ func main() {
 	config := &mqsar.Config{}
 	config.MqttConfig = mqsar.MqttConfig{}
 	config.MqttConfig.Port = *mqttPort
+	config.MqttConfig.Qos1NoWaitReply = true
+	config.HttpConfig = mqsar.HttpConfig{}
+	config.HttpConfig.Host = *httpHost
+	config.HttpConfig.Port = *httpPort
 	config.PulsarConfig = mqsar.PulsarConfig{}
 	config.PulsarConfig.Host = *pulsarHost
 	config.PulsarConfig.HttpPort = *pulsarHttpPort
