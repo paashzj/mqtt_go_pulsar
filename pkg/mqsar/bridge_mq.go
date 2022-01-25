@@ -125,6 +125,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				producerOptions := pulsar.ProducerOptions{}
 				producerOptions.DisableBatching = p.mqttConfig.DisableBatching
 				producerOptions.SendTimeout = p.mqttConfig.SendTimeout
+				producerOptions.BatchingMaxPublishDelay = p.mqttConfig.BatchingMaxPublishDelay
 				producerOptions.DisableBlockIfQueueFull = true
 				producerOptions.Topic = produceTopic
 				logrus.Infof("begin to create producer. mqttTopic : %s, topic : %s", e.Topic, produceTopic)
