@@ -41,12 +41,13 @@ type Config struct {
 }
 
 type MqttConfig struct {
-	Host                string
-	Port                int
-	Qos1NoWaitReply     bool
-	DisableBatching     bool
-	SendTimeout         time.Duration
-	SendRoutinePoolSize int
+	Host                    string
+	Port                    int
+	Qos1NoWaitReply         bool
+	DisableBatching         bool
+	BatchingMaxPublishDelay time.Duration
+	SendTimeout             time.Duration
+	SendRoutinePoolSize     int
 }
 
 type HttpConfig struct {
