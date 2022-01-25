@@ -155,7 +155,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 						metrics.PulsarSendSuccessCount.Add(1)
 						logrus.Info("Send pulsar success ", id)
 					}
-					metrics.PulsarSendLatency.Observe(float64(time.Now().Sub(startTime).Milliseconds()))
+					metrics.PulsarSendLatency.Observe(float64(time.Since(startTime).Milliseconds()))
 				})
 			})
 			if err != nil {
@@ -170,7 +170,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				metrics.PulsarSendSuccessCount.Add(1)
 				logrus.Info("Send pulsar success ", messageID)
 			}
-			metrics.PulsarSendLatency.Observe(float64(time.Now().Sub(startTime).Milliseconds()))
+			metrics.PulsarSendLatency.Observe(float64(time.Since(startTime).Milliseconds()))
 		}
 	} else {
 		logrus.Info("Unsupported action ", e.Action)
