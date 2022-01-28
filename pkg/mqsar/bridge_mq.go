@@ -174,7 +174,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 			metrics.PulsarSendLatency.Observe(float64(time.Since(startTime).Milliseconds()))
 		}
 	} else {
-		logrus.Info("Unsupported action ", e.Action)
+		logrus.Warn("Unsupported action ", e.Action)
 	}
 	return nil
 }
