@@ -15,33 +15,45 @@
 // specific language governing permissions and limitations
 // under the License.
 
-package test
+package conf
 
 import (
-	"github.com/paashzj/mqtt_go_pulsar/pkg/conf"
-	"github.com/paashzj/mqtt_go_pulsar/pkg/mqsar"
+	"time"
 )
 
-func setupMqsar() (*mqsar.Broker, int) {
-	port, err := AcquireUnusedPort()
-	if err != nil {
-		panic(err)
-	}
-	broker, err := setupMqsarInternal(port)
-	if err != nil {
-		panic(err)
-	}
-	return broker, port
+type Config struct {
+	MqttConfig   MqttConfig
+	HttpConfig   HttpConfig
+	PulsarConfig PulsarConfig
+	TraceConfig  TraceConfig
 }
 
-func setupMqsarInternal(port int) (*mqsar.Broker, error) {
-	config := &conf.Config{}
-	config.MqttConfig = conf.MqttConfig{}
-	config.MqttConfig.Port = port
-	config.PulsarConfig = conf.PulsarConfig{}
-	config.PulsarConfig.Host = "localhost"
-	config.PulsarConfig.HttpPort = 8080
-	config.PulsarConfig.TcpPort = 6650
-	mqsarImpl := &MqsarImpl{}
-	return mqsar.Run(config, mqsarImpl)
+type MqttConfig struct {
+	Host                    string
+	Port                    int
+	Qos1NoWaitReply         bool
+	DisableBatching         bool
+	BatchingMaxPublishDelay time.Duration
+	SendTimeout             time.Duration
+	SendRoutinePoolSize     int
+}
+
+type HttpConfig struct {
+	Disable      bool
+	Host         string
+	Port         int
+	DisablePprof bool
+}
+
+type PulsarConfig struct {
+	Host     string
+	HttpPort int
+	TcpPort  int
+}
+
+type TraceConfig struct {
+	DisableTracing bool
+	SkywalkingHost string
+	SkywalkingPort int
+	SampleRate     float64
 }

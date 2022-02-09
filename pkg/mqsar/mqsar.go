@@ -23,45 +23,17 @@ import (
 	"github.com/fhmq/hmq/broker"
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/conf"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/metrics"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/service"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/sky"
 	"github.com/panjf2000/ants/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"os"
 	"os/signal"
 	"strconv"
-	"time"
 )
-
-type Config struct {
-	MqttConfig   MqttConfig
-	HttpConfig   HttpConfig
-	PulsarConfig PulsarConfig
-}
-
-type MqttConfig struct {
-	Host                    string
-	Port                    int
-	Qos1NoWaitReply         bool
-	DisableBatching         bool
-	BatchingMaxPublishDelay time.Duration
-	SendTimeout             time.Duration
-	SendRoutinePoolSize     int
-}
-
-type HttpConfig struct {
-	Disable      bool
-	Host         string
-	Port         int
-	DisablePprof bool
-}
-
-type PulsarConfig struct {
-	Host     string
-	HttpPort int
-	TcpPort  int
-}
 
 type Broker struct {
 	mqttBroker *broker.Broker
@@ -71,7 +43,7 @@ func (b *Broker) DisConnClientByClientId(clientId string) {
 	b.mqttBroker.DisConnClientByClientId(clientId)
 }
 
-func RunFront(config *Config, impl Server) (err error) {
+func RunFront(config *conf.Config, impl Server) (err error) {
 	_, err = Run(config, impl)
 	if err != nil {
 		return
@@ -84,7 +56,7 @@ func RunFront(config *Config, impl Server) (err error) {
 	}
 }
 
-func Run(config *Config, impl Server) (b *Broker, err error) {
+func Run(config *conf.Config, impl Server) (b *Broker, err error) {
 	// gin http server
 	if !config.HttpConfig.Disable {
 		metrics.Init()
@@ -100,6 +72,8 @@ func Run(config *Config, impl Server) (b *Broker, err error) {
 			}
 		}()
 	}
+	// tracer
+	tracer := sky.NewTracer(config.TraceConfig)
 	// mqtt broker
 	mqttConfig := &broker.Config{}
 	mqttConfig.Host = config.MqttConfig.Host
@@ -112,7 +86,7 @@ func Run(config *Config, impl Server) (b *Broker, err error) {
 		logrus.Errorf("init pool faild. err: %s", err)
 		panic(err)
 	}
-	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, clientOptions, impl, pool)
+	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, clientOptions, impl, pool, tracer)
 	mqttConfig.Plugin.Auth = newPulsarAuthMq(impl)
 	if err != nil {
 		return nil, err

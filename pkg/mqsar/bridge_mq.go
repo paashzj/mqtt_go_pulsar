@@ -21,17 +21,20 @@ import (
 	"context"
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/fhmq/hmq/plugins/bridge"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/conf"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/consume"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/metrics"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/module"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/sky"
 	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
+	v3 "skywalking.apache.org/repo/goapi/collect/language/agent/v3"
 	"sync"
 	"time"
 )
 
 type pulsarBridgeMq struct {
-	mqttConfig                MqttConfig
+	mqttConfig                conf.MqttConfig
 	pulsarClient              pulsar.Client
 	server                    Server
 	mutex                     sync.RWMutex
@@ -41,14 +44,15 @@ type pulsarBridgeMq struct {
 	producerMap               map[module.MqttTopicKey]pulsar.Producer
 	consumerMap               map[module.MqttTopicKey]pulsar.Consumer
 	consumerRoutineContextMap map[module.MqttTopicKey]*consume.RoutineContext
+	tracer                    *sky.NoErrorTracer
 }
 
-func newPulsarBridgeMq(config MqttConfig, options pulsar.ClientOptions, impl Server, pool *ants.Pool) (bridge.BridgeMQ, error) {
+func newPulsarBridgeMq(config conf.MqttConfig, options pulsar.ClientOptions, impl Server, pool *ants.Pool, tracer *sky.NoErrorTracer) (bridge.BridgeMQ, error) {
 	client, err := pulsar.NewClient(options)
 	if err != nil {
 		return nil, err
 	}
-	bridgeMq := &pulsarBridgeMq{mqttConfig: config, pulsarClient: client, server: impl, pool: pool}
+	bridgeMq := &pulsarBridgeMq{mqttConfig: config, pulsarClient: client, server: impl, pool: pool, tracer: tracer}
 	bridgeMq.sessionProducerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.sessionConsumerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.producerMap = make(map[module.MqttTopicKey]pulsar.Producer)
@@ -146,9 +150,22 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 		producerMessage := pulsar.ProducerMessage{}
 		producerMessage.Payload = []byte(e.Payload)
 		startTime := time.Now()
+		localSpan, _, spanErr := p.tracer.CreateEntrySpan(context.TODO(), "send-pulsar", func(headerKey string) (string, error) {
+			return "", nil
+		})
+		localSpan.SetSpanLayer(v3.SpanLayer_MQ)
+		if spanErr != nil {
+			logrus.Debug("create span err", spanErr)
+		} else {
+			localSpan.SetOperationName("send pulsar")
+			localSpan.Tag("topic", aux.Topic())
+		}
 		if p.mqttConfig.Qos1NoWaitReply {
 			err := p.pool.Submit(func() {
 				aux.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
+					if spanErr == nil {
+						localSpan.End()
+					}
 					if err != nil {
 						metrics.PulsarSendFailCount.Add(1)
 						logrus.Error("Send pulsar error ", err)
@@ -164,6 +181,9 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 			}
 		} else {
 			messageID, err := aux.Send(context.TODO(), &producerMessage)
+			if spanErr == nil {
+				localSpan.End()
+			}
 			if err != nil {
 				metrics.PulsarSendFailCount.Add(1)
 				logrus.Error("Send pulsar error ", err)
