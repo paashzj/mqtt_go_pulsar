@@ -25,6 +25,7 @@ import (
 	"github.com/paashzj/mqtt_go_pulsar/pkg/metrics"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/module"
 	"github.com/panjf2000/ants/v2"
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	"sync"
 	"time"
@@ -150,13 +151,17 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 			err := p.pool.Submit(func() {
 				aux.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
 					if err != nil {
-						metrics.PulsarSendFailCount.Add(1)
+						metrics.PulsarSendFailCount.(prometheus.ExemplarAdder).AddWithExemplar(1,
+							prometheus.Labels{"topic": e.Topic})
 						logrus.Error("Send pulsar error ", err)
 					} else {
-						metrics.PulsarSendSuccessCount.Add(1)
+						metrics.PulsarSendSuccessCount.(prometheus.ExemplarAdder).AddWithExemplar(1,
+							prometheus.Labels{"topic": e.Topic})
 						logrus.Info("Send pulsar success ", id)
 					}
-					metrics.PulsarSendLatency.Observe(float64(time.Since(startTime).Milliseconds()))
+					metrics.PulsarSendLatency.(prometheus.ExemplarObserver).ObserveWithExemplar(
+						float64(time.Since(startTime).Milliseconds()),
+						prometheus.Labels{"topic": e.Topic})
 				})
 			})
 			if err != nil {
@@ -165,13 +170,17 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 		} else {
 			messageID, err := aux.Send(context.TODO(), &producerMessage)
 			if err != nil {
-				metrics.PulsarSendFailCount.Add(1)
+				metrics.PulsarSendFailCount.(prometheus.ExemplarAdder).AddWithExemplar(1,
+					prometheus.Labels{"topic": e.Topic})
 				logrus.Error("Send pulsar error ", err)
 			} else {
-				metrics.PulsarSendSuccessCount.Add(1)
+				metrics.PulsarSendSuccessCount.(prometheus.ExemplarAdder).AddWithExemplar(1,
+					prometheus.Labels{"topic": e.Topic})
 				logrus.Info("Send pulsar success ", messageID)
 			}
-			metrics.PulsarSendLatency.Observe(float64(time.Since(startTime).Milliseconds()))
+			metrics.PulsarSendLatency.(prometheus.ExemplarObserver).ObserveWithExemplar(
+				float64(time.Since(startTime).Milliseconds()),
+				prometheus.Labels{"topic": e.Topic})
 		}
 	} else {
 		logrus.Warn("Unsupported action ", e.Action)
