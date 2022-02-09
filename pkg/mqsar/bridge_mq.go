@@ -25,7 +25,6 @@ import (
 	"github.com/paashzj/mqtt_go_pulsar/pkg/metrics"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/module"
 	"github.com/panjf2000/ants/v2"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 	"sync"
 	"time"
@@ -151,17 +150,14 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 			err := p.pool.Submit(func() {
 				aux.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
 					if err != nil {
-						metrics.PulsarSendFailCount.(prometheus.ExemplarAdder).AddWithExemplar(1,
-							prometheus.Labels{"topic": e.Topic})
+						metrics.PulsarSendFailCount.WithLabelValues(e.Topic, aux.Topic()).Add(1)
 						logrus.Error("Send pulsar error ", err)
 					} else {
-						metrics.PulsarSendSuccessCount.(prometheus.ExemplarAdder).AddWithExemplar(1,
-							prometheus.Labels{"topic": e.Topic})
+						metrics.PulsarSendSuccessCount.WithLabelValues(e.Topic, aux.Topic()).Add(1)
 						logrus.Info("Send pulsar success ", id)
 					}
-					metrics.PulsarSendLatency.(prometheus.ExemplarObserver).ObserveWithExemplar(
-						float64(time.Since(startTime).Milliseconds()),
-						prometheus.Labels{"topic": e.Topic})
+					metrics.PulsarSendLatency.WithLabelValues(e.Topic, aux.Topic()).Observe(
+						float64(time.Since(startTime).Milliseconds()))
 				})
 			})
 			if err != nil {
@@ -170,17 +166,14 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 		} else {
 			messageID, err := aux.Send(context.TODO(), &producerMessage)
 			if err != nil {
-				metrics.PulsarSendFailCount.(prometheus.ExemplarAdder).AddWithExemplar(1,
-					prometheus.Labels{"topic": e.Topic})
+				metrics.PulsarSendFailCount.WithLabelValues(e.Topic, aux.Topic()).Add(1)
 				logrus.Error("Send pulsar error ", err)
 			} else {
-				metrics.PulsarSendSuccessCount.(prometheus.ExemplarAdder).AddWithExemplar(1,
-					prometheus.Labels{"topic": e.Topic})
+				metrics.PulsarSendSuccessCount.WithLabelValues(e.Topic, aux.Topic()).Add(1)
 				logrus.Info("Send pulsar success ", messageID)
 			}
-			metrics.PulsarSendLatency.(prometheus.ExemplarObserver).ObserveWithExemplar(
-				float64(time.Since(startTime).Milliseconds()),
-				prometheus.Labels{"topic": e.Topic})
+			metrics.PulsarSendLatency.WithLabelValues(e.Topic, aux.Topic()).Observe(
+				float64(time.Since(startTime).Milliseconds()))
 		}
 	} else {
 		logrus.Warn("Unsupported action ", e.Action)

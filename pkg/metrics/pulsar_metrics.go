@@ -23,14 +23,20 @@ import (
 )
 
 var (
-	PulsarSendSuccessCount = promauto.NewCounter(prometheus.CounterOpts{
-		Name: prometheus.BuildFQName(namespace, "produce", "pulsar_send_success_total"),
-	})
-	PulsarSendFailCount = promauto.NewCounter(prometheus.CounterOpts{
-		Name: prometheus.BuildFQName(namespace, "produce", "pulsar_send_fail_total"),
-	})
-	PulsarSendLatency = promauto.NewSummary(prometheus.SummaryOpts{
-		Name:       prometheus.BuildFQName(namespace, "produce", "pulsar_send_latency_ms"),
-		Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
-	})
+	PulsarSendSuccessCount = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: prometheus.BuildFQName(namespace, "produce", "pulsar_send_success_total")},
+		[]string{"mqtt_topic", "pulsar_topic"},
+	)
+	PulsarSendFailCount = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: prometheus.BuildFQName(namespace, "produce", "pulsar_send_fail_total")},
+		[]string{"mqtt_topic", "pulsar_topic"},
+	)
+	PulsarSendLatency = promauto.NewSummaryVec(
+		prometheus.SummaryOpts{
+			Name:       prometheus.BuildFQName(namespace, "produce", "pulsar_send_latency_ms"),
+			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001}},
+		[]string{"mqtt_topic", "pulsar_topic"},
+	)
 )
