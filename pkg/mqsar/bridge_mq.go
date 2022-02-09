@@ -167,13 +167,14 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 						localSpan.End()
 					}
 					if err != nil {
-						metrics.PulsarSendFailCount.Add(1)
+						metrics.PulsarSendFailCount.WithLabelValues(e.Topic, aux.Topic()).Add(1)
 						logrus.Error("Send pulsar error ", err)
 					} else {
-						metrics.PulsarSendSuccessCount.Add(1)
+						metrics.PulsarSendSuccessCount.WithLabelValues(e.Topic, aux.Topic()).Add(1)
 						logrus.Info("Send pulsar success ", id)
 					}
-					metrics.PulsarSendLatency.Observe(float64(time.Since(startTime).Milliseconds()))
+					metrics.PulsarSendLatency.WithLabelValues(e.Topic, aux.Topic()).Observe(
+						float64(time.Since(startTime).Milliseconds()))
 				})
 			})
 			if err != nil {
@@ -185,13 +186,14 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				localSpan.End()
 			}
 			if err != nil {
-				metrics.PulsarSendFailCount.Add(1)
+				metrics.PulsarSendFailCount.WithLabelValues(e.Topic, aux.Topic()).Add(1)
 				logrus.Error("Send pulsar error ", err)
 			} else {
-				metrics.PulsarSendSuccessCount.Add(1)
+				metrics.PulsarSendSuccessCount.WithLabelValues(e.Topic, aux.Topic()).Add(1)
 				logrus.Info("Send pulsar success ", messageID)
 			}
-			metrics.PulsarSendLatency.Observe(float64(time.Since(startTime).Milliseconds()))
+			metrics.PulsarSendLatency.WithLabelValues(e.Topic, aux.Topic()).Observe(
+				float64(time.Since(startTime).Milliseconds()))
 		}
 	} else {
 		logrus.Warn("Unsupported action ", e.Action)
