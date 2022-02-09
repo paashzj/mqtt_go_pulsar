@@ -19,6 +19,7 @@ package main
 
 import (
 	"flag"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/conf"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/mqsar"
 )
 
@@ -39,17 +40,22 @@ var (
 
 func main() {
 	flag.Parse()
-	config := &mqsar.Config{}
-	config.MqttConfig = mqsar.MqttConfig{}
+	config := &conf.Config{}
+	config.MqttConfig = conf.MqttConfig{}
 	config.MqttConfig.Port = *mqttPort
 	config.MqttConfig.Qos1NoWaitReply = true
-	config.HttpConfig = mqsar.HttpConfig{}
+	config.HttpConfig = conf.HttpConfig{}
 	config.HttpConfig.Host = *httpHost
 	config.HttpConfig.Port = *httpPort
-	config.PulsarConfig = mqsar.PulsarConfig{}
+	config.PulsarConfig = conf.PulsarConfig{}
 	config.PulsarConfig.Host = *pulsarHost
 	config.PulsarConfig.HttpPort = *pulsarHttpPort
 	config.PulsarConfig.TcpPort = *pulsarTcpPort
+	config.TraceConfig = conf.TraceConfig{}
+	config.TraceConfig.DisableTracing = true
+	config.TraceConfig.SkywalkingHost = "localhost"
+	config.TraceConfig.SkywalkingPort = 11800
+	config.TraceConfig.SampleRate = 1
 	e := &ExampleMqsarImpl{}
 	err := mqsar.RunFront(config, e)
 	if err != nil {
