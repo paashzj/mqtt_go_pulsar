@@ -48,10 +48,19 @@ type pulsarBridgeMq struct {
 	tracer                    *sky.NoErrorTracer
 }
 
-func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, options pulsar.ClientOptions, impl Server, pool *ants.Pool, tracer *sky.NoErrorTracer) (bridge.BridgeMQ, error) {
+func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, options pulsar.ClientOptions, impl Server, tracer *sky.NoErrorTracer) (bridge.BridgeMQ, error) {
 	client, err := pulsar.NewClient(options)
 	if err != nil {
 		return nil, err
+	}
+	size := pulsarConfig.ProducerConfig.RoutinePoolSize
+	var pool *ants.Pool
+	if !pulsarConfig.ProducerConfig.DisableRoutinePool {
+		pool, err = ants.NewPool(size)
+		if err != nil {
+			logrus.Errorf("init pool faild. err: %s", err)
+			return nil, err
+		}
 	}
 	bridgeMq := &pulsarBridgeMq{mqttConfig: config, pulsarConfig: pulsarConfig, pulsarClient: client, server: impl, pool: pool, tracer: tracer}
 	bridgeMq.sessionProducerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
@@ -141,10 +150,10 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				return nil
 			} else {
 				producerOptions := pulsar.ProducerOptions{}
-				producerOptions.DisableBatching = p.pulsarConfig.PulsarProducerConfig.DisableBatching
-				producerOptions.SendTimeout = p.pulsarConfig.PulsarProducerConfig.SendTimeout
-				producerOptions.BatchingMaxPublishDelay = p.pulsarConfig.PulsarProducerConfig.BatchingMaxPublishDelay
-				producerOptions.MaxPendingMessages = p.pulsarConfig.PulsarProducerConfig.MaxPendingMessages
+				producerOptions.DisableBatching = p.pulsarConfig.ProducerConfig.DisableBatching
+				producerOptions.SendTimeout = p.pulsarConfig.ProducerConfig.SendTimeout
+				producerOptions.BatchingMaxPublishDelay = p.pulsarConfig.ProducerConfig.BatchingMaxPublishDelay
+				producerOptions.MaxPendingMessages = p.pulsarConfig.ProducerConfig.MaxPendingMessages
 				producerOptions.DisableBlockIfQueueFull = true
 				producerOptions.Topic = produceTopic
 				logrus.Infof("begin to create producer. mqttTopic : %s, topic : %s", e.Topic, produceTopic)
@@ -175,7 +184,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 			localSpan.Tag("topic", aux.Topic())
 		}
 		if p.mqttConfig.Qos1NoWaitReply {
-			err := p.pool.Submit(func() {
+			task := func() {
 				aux.SendAsync(context.TODO(), &producerMessage, func(id pulsar.MessageID, message *pulsar.ProducerMessage, err error) {
 					if spanErr == nil {
 						localSpan.End()
@@ -190,9 +199,14 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 					metrics.PulsarSendLatency.WithLabelValues(e.Topic, aux.Topic()).Observe(
 						float64(time.Since(startTime).Milliseconds()))
 				})
-			})
-			if err != nil {
-				logrus.Errorf("submit send pulsar task failed. err: %s", err)
+			}
+			if p.pulsarConfig.ProducerConfig.DisableRoutinePool {
+				task()
+			} else {
+				err := p.pool.Submit(task)
+				if err != nil {
+					logrus.Errorf("submit send pulsar task failed. err: %s", err)
+				}
 			}
 		} else {
 			messageID, err := aux.Send(context.TODO(), &producerMessage)

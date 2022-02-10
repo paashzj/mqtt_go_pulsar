@@ -27,7 +27,6 @@ import (
 	"github.com/paashzj/mqtt_go_pulsar/pkg/metrics"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/service"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/sky"
-	"github.com/panjf2000/ants/v2"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/sirupsen/logrus"
 	"os"
@@ -80,17 +79,11 @@ func Run(config *conf.Config, impl Server) (b *Broker, err error) {
 	mqttConfig.Port = strconv.Itoa(config.MqttConfig.Port)
 	clientOptions := pulsar.ClientOptions{}
 	clientOptions.URL = fmt.Sprintf("pulsar://%s:%d", config.PulsarConfig.Host, config.PulsarConfig.TcpPort)
-	size := config.PulsarConfig.PulsarProducerConfig.SendRoutinePoolSize
-	pool, err := ants.NewPool(size)
-	if err != nil {
-		logrus.Errorf("init pool faild. err: %s", err)
-		panic(err)
-	}
-	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, config.PulsarConfig, clientOptions, impl, pool, tracer)
-	mqttConfig.Plugin.Auth = newPulsarAuthMq(impl)
+	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, config.PulsarConfig, clientOptions, impl, tracer)
 	if err != nil {
 		return nil, err
 	}
+	mqttConfig.Plugin.Auth = newPulsarAuthMq(impl)
 	newBroker, err := broker.NewBroker(mqttConfig)
 	if err != nil {
 		return nil, err
