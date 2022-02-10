@@ -3,6 +3,7 @@ module github.com/paashzj/mqtt_go_pulsar
 go 1.17
 
 require (
+	github.com/SkyAPM/go2sky v1.3.0
 	github.com/apache/pulsar-client-go v0.7.0
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/docker/go-connections v0.4.0
@@ -10,10 +11,12 @@ require (
 	github.com/fhmq/hmq v0.0.0-20220119031624-bf2b91c535a8
 	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-gonic/gin v1.7.7
+	github.com/hashicorp/go-uuid v1.0.2
 	github.com/panjf2000/ants/v2 v2.4.7
 	github.com/prometheus/client_golang v1.12.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
+	skywalking.apache.org/repo/goapi v0.0.0-20220121092418-9c455d0dda3f
 )
 
 require (
@@ -22,7 +25,6 @@ require (
 	github.com/DataDog/zstd v1.5.0 // indirect
 	github.com/Microsoft/go-winio v0.5.1 // indirect
 	github.com/Shopify/sarama v1.31.0 // indirect
-	github.com/SkyAPM/go2sky v1.3.0 // indirect
 	github.com/apache/pulsar-client-go/oauth2 v0.0.0-20201120111947-b8bd55bc02bd // indirect
 	github.com/ardielle/ardielle-go v1.5.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -49,7 +51,6 @@ require (
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/gsterjov/go-libsecret v0.0.0-20161001094733-a6f4afe4910c // indirect
-	github.com/hashicorp/go-uuid v1.0.2 // indirect
 	github.com/jcmturner/aescts/v2 v2.0.0 // indirect
 	github.com/jcmturner/dnsutils/v2 v2.0.0 // indirect
 	github.com/jcmturner/gofork v1.0.0 // indirect
@@ -98,5 +99,4 @@ require (
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
-	skywalking.apache.org/repo/goapi v0.0.0-20220121092418-9c455d0dda3f // indirect
 )

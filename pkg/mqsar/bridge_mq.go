@@ -59,6 +59,7 @@ func newPulsarBridgeMq(config conf.MqttConfig, options pulsar.ClientOptions, imp
 	bridgeMq.consumerMap = make(map[module.MqttTopicKey]pulsar.Consumer)
 	bridgeMq.consumerRoutineContextMap = make(map[module.MqttTopicKey]*consume.RoutineContext)
 	return bridgeMq, nil
+
 }
 
 func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
@@ -68,6 +69,18 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 	}
 	if e.Action == bridge.Connect {
 		p.mutex.Lock()
+		consumerKey := p.sessionConsumerMap[mqttSessionKey]
+		if len(consumerKey) != 0 {
+			for _, value := range consumerKey {
+				p.closeConsumer(value)
+			}
+		}
+		producerKey := p.sessionProducerMap[mqttSessionKey]
+		if len(producerKey) != 0 {
+			for _, value := range producerKey {
+				p.closeProducer(value)
+			}
+		}
 		p.sessionProducerMap[mqttSessionKey] = make([]module.MqttTopicKey, 0)
 		p.sessionConsumerMap[mqttSessionKey] = make([]module.MqttTopicKey, 0)
 		p.mutex.Unlock()
