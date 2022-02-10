@@ -32,14 +32,6 @@ type MqttConfig struct {
 	Qos1NoWaitReply bool
 }
 
-type PulsarProducerConfig struct {
-	DisableBatching         bool
-	BatchingMaxPublishDelay time.Duration
-	SendTimeout             time.Duration
-	SendRoutinePoolSize     int
-	MaxPendingMessages      int
-}
-
 type HttpConfig struct {
 	Disable      bool
 	Host         string
@@ -48,10 +40,23 @@ type HttpConfig struct {
 }
 
 type PulsarConfig struct {
-	Host                 string
-	HttpPort             int
-	TcpPort              int
-	PulsarProducerConfig PulsarProducerConfig
+	Host           string
+	HttpPort       int
+	TcpPort        int
+	ProducerConfig PulsarProducerConfig
+	ConsumerConfig PulsarConsumerConfig
+}
+
+type PulsarProducerConfig struct {
+	DisableRoutinePool      bool
+	RoutinePoolSize         int
+	DisableBatching         bool
+	BatchingMaxPublishDelay time.Duration
+	SendTimeout             time.Duration
+	MaxPendingMessages      int
+}
+
+type PulsarConsumerConfig struct {
 }
 
 type TraceConfig struct {
