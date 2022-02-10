@@ -80,13 +80,13 @@ func Run(config *conf.Config, impl Server) (b *Broker, err error) {
 	mqttConfig.Port = strconv.Itoa(config.MqttConfig.Port)
 	clientOptions := pulsar.ClientOptions{}
 	clientOptions.URL = fmt.Sprintf("pulsar://%s:%d", config.PulsarConfig.Host, config.PulsarConfig.TcpPort)
-	size := config.MqttConfig.SendRoutinePoolSize
+	size := config.PulsarConfig.PulsarProducerConfig.SendRoutinePoolSize
 	pool, err := ants.NewPool(size)
 	if err != nil {
 		logrus.Errorf("init pool faild. err: %s", err)
 		panic(err)
 	}
-	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, clientOptions, impl, pool, tracer)
+	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, config.PulsarConfig, clientOptions, impl, pool, tracer)
 	mqttConfig.Plugin.Auth = newPulsarAuthMq(impl)
 	if err != nil {
 		return nil, err

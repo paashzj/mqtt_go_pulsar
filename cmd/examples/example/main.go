@@ -51,6 +51,8 @@ func main() {
 	config.PulsarConfig.Host = *pulsarHost
 	config.PulsarConfig.HttpPort = *pulsarHttpPort
 	config.PulsarConfig.TcpPort = *pulsarTcpPort
+	pulsarProducerConfig := conf.PulsarProducerConfig{}
+	config.PulsarConfig.PulsarProducerConfig = pulsarProducerConfig
 	config.TraceConfig = conf.TraceConfig{}
 	config.TraceConfig.DisableTracing = true
 	config.TraceConfig.SkywalkingHost = "localhost"

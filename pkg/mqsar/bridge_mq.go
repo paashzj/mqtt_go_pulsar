@@ -35,6 +35,7 @@ import (
 
 type pulsarBridgeMq struct {
 	mqttConfig                conf.MqttConfig
+	pulsarConfig              conf.PulsarConfig
 	pulsarClient              pulsar.Client
 	server                    Server
 	mutex                     sync.RWMutex
@@ -47,12 +48,12 @@ type pulsarBridgeMq struct {
 	tracer                    *sky.NoErrorTracer
 }
 
-func newPulsarBridgeMq(config conf.MqttConfig, options pulsar.ClientOptions, impl Server, pool *ants.Pool, tracer *sky.NoErrorTracer) (bridge.BridgeMQ, error) {
+func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, options pulsar.ClientOptions, impl Server, pool *ants.Pool, tracer *sky.NoErrorTracer) (bridge.BridgeMQ, error) {
 	client, err := pulsar.NewClient(options)
 	if err != nil {
 		return nil, err
 	}
-	bridgeMq := &pulsarBridgeMq{mqttConfig: config, pulsarClient: client, server: impl, pool: pool, tracer: tracer}
+	bridgeMq := &pulsarBridgeMq{mqttConfig: config, pulsarConfig: pulsarConfig, pulsarClient: client, server: impl, pool: pool, tracer: tracer}
 	bridgeMq.sessionProducerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.sessionConsumerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.producerMap = make(map[module.MqttTopicKey]pulsar.Producer)
@@ -140,9 +141,10 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				return nil
 			} else {
 				producerOptions := pulsar.ProducerOptions{}
-				producerOptions.DisableBatching = p.mqttConfig.DisableBatching
-				producerOptions.SendTimeout = p.mqttConfig.SendTimeout
-				producerOptions.BatchingMaxPublishDelay = p.mqttConfig.BatchingMaxPublishDelay
+				producerOptions.DisableBatching = p.pulsarConfig.PulsarProducerConfig.DisableBatching
+				producerOptions.SendTimeout = p.pulsarConfig.PulsarProducerConfig.SendTimeout
+				producerOptions.BatchingMaxPublishDelay = p.pulsarConfig.PulsarProducerConfig.BatchingMaxPublishDelay
+				producerOptions.MaxPendingMessages = p.pulsarConfig.PulsarProducerConfig.MaxPendingMessages
 				producerOptions.DisableBlockIfQueueFull = true
 				producerOptions.Topic = produceTopic
 				logrus.Infof("begin to create producer. mqttTopic : %s, topic : %s", e.Topic, produceTopic)
@@ -157,7 +159,6 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 					p.mutex.Unlock()
 					aux = producer
 				}
-
 			}
 		}
 		producerMessage := pulsar.ProducerMessage{}

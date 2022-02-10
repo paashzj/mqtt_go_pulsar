@@ -17,9 +17,7 @@
 
 package conf
 
-import (
-	"time"
-)
+import "time"
 
 type Config struct {
 	MqttConfig   MqttConfig
@@ -29,13 +27,17 @@ type Config struct {
 }
 
 type MqttConfig struct {
-	Host                    string
-	Port                    int
-	Qos1NoWaitReply         bool
+	Host            string
+	Port            int
+	Qos1NoWaitReply bool
+}
+
+type PulsarProducerConfig struct {
 	DisableBatching         bool
 	BatchingMaxPublishDelay time.Duration
 	SendTimeout             time.Duration
 	SendRoutinePoolSize     int
+	MaxPendingMessages      int
 }
 
 type HttpConfig struct {
@@ -46,9 +48,10 @@ type HttpConfig struct {
 }
 
 type PulsarConfig struct {
-	Host     string
-	HttpPort int
-	TcpPort  int
+	Host                 string
+	HttpPort             int
+	TcpPort              int
+	PulsarProducerConfig PulsarProducerConfig
 }
 
 type TraceConfig struct {
