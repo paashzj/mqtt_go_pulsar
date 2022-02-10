@@ -33,6 +33,6 @@ func TestMqttBrokerDisconnect(t *testing.T) {
 	token.Wait()
 	assert.True(t, mqttCli.IsConnected())
 	broker.DisConnClientByClientId("foo")
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 	assert.False(t, mqttCli.IsConnected())
 }
