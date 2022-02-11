@@ -201,7 +201,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				})
 			}
 			if p.pulsarConfig.ProduceConfig.DisableRoutinePool {
-				task()
+				go task()
 			} else {
 				err := p.pool.Submit(task)
 				if err != nil {
