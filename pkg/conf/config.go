@@ -40,14 +40,14 @@ type HttpConfig struct {
 }
 
 type PulsarConfig struct {
-	Host           string
-	HttpPort       int
-	TcpPort        int
-	ProducerConfig PulsarProducerConfig
-	ConsumerConfig PulsarConsumerConfig
+	Host          string
+	HttpPort      int
+	TcpPort       int
+	ProduceConfig PulsarProduceConfig
+	ConsumeConfig PulsarConsumeConfig
 }
 
-type PulsarProducerConfig struct {
+type PulsarProduceConfig struct {
 	DisableRoutinePool      bool
 	RoutinePoolSize         int
 	DisableBatching         bool
@@ -56,7 +56,7 @@ type PulsarProducerConfig struct {
 	MaxPendingMessages      int
 }
 
-type PulsarConsumerConfig struct {
+type PulsarConsumeConfig struct {
 }
 
 type TraceConfig struct {
