@@ -53,9 +53,9 @@ func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, o
 	if err != nil {
 		return nil, err
 	}
-	size := pulsarConfig.ProducerConfig.RoutinePoolSize
+	size := pulsarConfig.ProduceConfig.RoutinePoolSize
 	var pool *ants.Pool
-	if !pulsarConfig.ProducerConfig.DisableRoutinePool {
+	if !pulsarConfig.ProduceConfig.DisableRoutinePool {
 		pool, err = ants.NewPool(size)
 		if err != nil {
 			logrus.Errorf("init pool faild. err: %s", err)
@@ -150,10 +150,10 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 				return nil
 			} else {
 				producerOptions := pulsar.ProducerOptions{}
-				producerOptions.DisableBatching = p.pulsarConfig.ProducerConfig.DisableBatching
-				producerOptions.SendTimeout = p.pulsarConfig.ProducerConfig.SendTimeout
-				producerOptions.BatchingMaxPublishDelay = p.pulsarConfig.ProducerConfig.BatchingMaxPublishDelay
-				producerOptions.MaxPendingMessages = p.pulsarConfig.ProducerConfig.MaxPendingMessages
+				producerOptions.DisableBatching = p.pulsarConfig.ProduceConfig.DisableBatching
+				producerOptions.SendTimeout = p.pulsarConfig.ProduceConfig.SendTimeout
+				producerOptions.BatchingMaxPublishDelay = p.pulsarConfig.ProduceConfig.BatchingMaxPublishDelay
+				producerOptions.MaxPendingMessages = p.pulsarConfig.ProduceConfig.MaxPendingMessages
 				producerOptions.DisableBlockIfQueueFull = true
 				producerOptions.Topic = produceTopic
 				logrus.Infof("begin to create producer. mqttTopic : %s, topic : %s", e.Topic, produceTopic)
@@ -200,7 +200,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 						float64(time.Since(startTime).Milliseconds()))
 				})
 			}
-			if p.pulsarConfig.ProducerConfig.DisableRoutinePool {
+			if p.pulsarConfig.ProduceConfig.DisableRoutinePool {
 				task()
 			} else {
 				err := p.pool.Submit(task)
