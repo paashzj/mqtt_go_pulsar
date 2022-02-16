@@ -19,6 +19,7 @@ package mqsar
 
 import (
 	"context"
+	"errors"
 	"github.com/apache/pulsar-client-go/pulsar"
 	"github.com/fhmq/hmq/plugins/bridge"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/conf"
@@ -28,6 +29,7 @@ import (
 	"github.com/paashzj/mqtt_go_pulsar/pkg/sky"
 	"github.com/panjf2000/ants/v2"
 	"github.com/sirupsen/logrus"
+	"go.uber.org/atomic"
 	v3 "skywalking.apache.org/repo/goapi/collect/language/agent/v3"
 	"sync"
 	"time"
@@ -45,6 +47,7 @@ type pulsarBridgeMq struct {
 	producerMap               map[module.MqttTopicKey]pulsar.Producer
 	consumerMap               map[module.MqttTopicKey]pulsar.Consumer
 	consumerRoutineContextMap map[module.MqttTopicKey]*consume.RoutineContext
+	closed                    atomic.Bool
 	tracer                    *sky.NoErrorTracer
 }
 
@@ -72,7 +75,24 @@ func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, o
 
 }
 
+func (p *pulsarBridgeMq) Close() {
+	p.closed.Store(true)
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	for topicKey, producer := range p.producerMap {
+		logrus.Info("producer closed ", topicKey)
+		producer.Close()
+	}
+	for topicKey, consumer := range p.consumerMap {
+		logrus.Info("consumer closed ", topicKey)
+		consumer.Close()
+	}
+}
+
 func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
+	if p.closed.Load() {
+		return errors.New("mqtt broker has been closed")
+	}
 	mqttSessionKey := module.MqttSessionKey{
 		Username: e.Username,
 		ClientId: e.ClientID,
