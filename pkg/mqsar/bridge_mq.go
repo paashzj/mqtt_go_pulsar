@@ -235,10 +235,10 @@ func (p *pulsarBridgeMq) handlePublish(e *bridge.Elements, mqttSessionKey module
 	localSpan, _, spanErr := p.tracer.CreateEntrySpan(context.TODO(), "send-pulsar", func(headerKey string) (string, error) {
 		return "", nil
 	})
-	localSpan.SetSpanLayer(v3.SpanLayer_MQ)
 	if spanErr != nil {
 		logrus.Debug("create span err", spanErr)
 	} else {
+		localSpan.SetSpanLayer(v3.SpanLayer_MQ)
 		localSpan.SetOperationName("send pulsar")
 		localSpan.Tag("topic", aux.Topic())
 	}
