@@ -42,7 +42,7 @@ func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer)
 					return
 				}
 				logrus.Error("receive error is ", err)
-				break
+				continue
 			}
 			mqttBroker := service.GetMqttBroker()
 			publishPacket := packets.NewControlPacket(packets.Publish).(*packets.PublishPacket)
