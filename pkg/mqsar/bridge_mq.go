@@ -172,7 +172,7 @@ func (p *pulsarBridgeMq) handleSubscribe(e *bridge.Elements, mqttSessionKey modu
 			return err
 		} else {
 			p.consumerMap[mqttTopicKey] = consumer
-			consume.StartConsumeRoutine(mqttTopicKey, consumer)
+			consume.StartConsumeRoutine(mqttTopicKey, consumer, p.tracer, consumeTopic)
 			p.sessionConsumerMap[mqttSessionKey] = append(p.sessionConsumerMap[mqttSessionKey], mqttTopicKey)
 		}
 	}
