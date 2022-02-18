@@ -124,7 +124,7 @@ func TestMqttRetrySubscribeAfterDisconnect(t *testing.T) {
 		channel <- string(message.Payload())
 	})
 	token.Wait()
-	//订阅之后disconnect
+	//disconnect after subscribe
 	mqttCli.Disconnect(2000)
 	mqttCli = mqtt.NewClient(ops)
 	token = mqttCli.Connect()
