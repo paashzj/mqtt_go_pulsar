@@ -24,7 +24,9 @@ import (
 	"github.com/fhmq/hmq/broker"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/module"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/service"
+	"github.com/paashzj/mqtt_go_pulsar/pkg/sky"
 	"github.com/sirupsen/logrus"
+	v3 "skywalking.apache.org/repo/goapi/collect/language/agent/v3"
 	"strings"
 )
 
@@ -32,7 +34,7 @@ const (
 	ConsumerClosed = "consumer closed"
 )
 
-func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer) {
+func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer, tracer *sky.NoErrorTracer, consumerTopic string) {
 	go func() {
 		for {
 			receiveMsg, err := consumer.Receive(context.TODO())
@@ -44,6 +46,16 @@ func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer)
 				logrus.Error("receive error is ", err)
 				continue
 			}
+			localSpan, _, spanErr := tracer.CreateEntrySpan(context.TODO(), "consume-pulsar", func(headerKey string) (string, error) {
+				return "", nil
+			})
+			if spanErr != nil {
+				logrus.Debug("create span err", spanErr)
+			} else {
+				localSpan.SetSpanLayer(v3.SpanLayer_MQ)
+				localSpan.SetOperationName("consume pulsar")
+				localSpan.Tag("topic", consumerTopic)
+			}
 			mqttBroker := service.GetMqttBroker()
 			publishPacket := packets.NewControlPacket(packets.Publish).(*packets.PublishPacket)
 			publishPacket.TopicName = topicKey.Topic
@@ -53,6 +65,9 @@ func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer)
 			publishPacket.Dup = false
 			mqttBroker.PublishMessage(publishPacket)
 			consumer.Ack(receiveMsg)
+			if spanErr == nil {
+				localSpan.End()
+			}
 		}
 	}()
 }
