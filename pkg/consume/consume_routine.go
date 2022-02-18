@@ -25,40 +25,34 @@ import (
 	"github.com/paashzj/mqtt_go_pulsar/pkg/module"
 	"github.com/paashzj/mqtt_go_pulsar/pkg/service"
 	"github.com/sirupsen/logrus"
+	"strings"
 )
 
-type RoutineContext struct {
-	quit chan bool
-}
+const (
+	ConsumerClosed = "consumer closed"
+)
 
-func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer) *RoutineContext {
-	quit := make(chan bool)
+func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer) {
 	go func() {
 		for {
-			select {
-			case <-quit:
-				return
-			default:
-				receiveMsg, err := consumer.Receive(context.TODO())
-				if err != nil {
-					logrus.Error("receive error is ", err)
+			receiveMsg, err := consumer.Receive(context.TODO())
+			if err != nil {
+				if strings.Contains(err.Error(), ConsumerClosed) {
+					logrus.Errorf("consumer is closed. username: %s, clientId: %s topic: %s", topicKey.Username, topicKey.ClientId, topicKey.Topic)
 					return
 				}
-				mqttBroker := service.GetMqttBroker()
-				publishPacket := packets.NewControlPacket(packets.Publish).(*packets.PublishPacket)
-				publishPacket.TopicName = topicKey.Topic
-				publishPacket.Payload = receiveMsg.Payload()
-				publishPacket.Qos = broker.QosAtLeastOnce
-				publishPacket.Retain = false
-				publishPacket.Dup = false
-				mqttBroker.PublishMessage(publishPacket)
-				consumer.Ack(receiveMsg)
+				logrus.Error("receive error is ", err)
+				break
 			}
+			mqttBroker := service.GetMqttBroker()
+			publishPacket := packets.NewControlPacket(packets.Publish).(*packets.PublishPacket)
+			publishPacket.TopicName = topicKey.Topic
+			publishPacket.Payload = receiveMsg.Payload()
+			publishPacket.Qos = broker.QosAtLeastOnce
+			publishPacket.Retain = false
+			publishPacket.Dup = false
+			mqttBroker.PublishMessage(publishPacket)
+			consumer.Ack(receiveMsg)
 		}
 	}()
-	return &RoutineContext{quit: quit}
-}
-
-func StopConsumeRoutine(context *RoutineContext) {
-	context.quit <- true
 }

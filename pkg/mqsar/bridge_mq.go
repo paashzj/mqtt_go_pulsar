@@ -36,19 +36,18 @@ import (
 )
 
 type pulsarBridgeMq struct {
-	mqttConfig                conf.MqttConfig
-	pulsarConfig              conf.PulsarConfig
-	pulsarClient              pulsar.Client
-	server                    Server
-	mutex                     sync.RWMutex
-	pool                      *ants.Pool
-	sessionProducerMap        map[module.MqttSessionKey][]module.MqttTopicKey
-	sessionConsumerMap        map[module.MqttSessionKey][]module.MqttTopicKey
-	producerMap               map[module.MqttTopicKey]pulsar.Producer
-	consumerMap               map[module.MqttTopicKey]pulsar.Consumer
-	consumerRoutineContextMap map[module.MqttTopicKey]*consume.RoutineContext
-	closed                    atomic.Bool
-	tracer                    *sky.NoErrorTracer
+	mqttConfig         conf.MqttConfig
+	pulsarConfig       conf.PulsarConfig
+	pulsarClient       pulsar.Client
+	server             Server
+	mutex              sync.RWMutex
+	pool               *ants.Pool
+	sessionProducerMap map[module.MqttSessionKey][]module.MqttTopicKey
+	sessionConsumerMap map[module.MqttSessionKey][]module.MqttTopicKey
+	producerMap        map[module.MqttTopicKey]pulsar.Producer
+	consumerMap        map[module.MqttTopicKey]pulsar.Consumer
+	closed             atomic.Bool
+	tracer             *sky.NoErrorTracer
 }
 
 func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, options pulsar.ClientOptions, impl Server, tracer *sky.NoErrorTracer) (bridge.BridgeMQ, error) {
@@ -70,7 +69,6 @@ func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, o
 	bridgeMq.sessionConsumerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.producerMap = make(map[module.MqttTopicKey]pulsar.Producer)
 	bridgeMq.consumerMap = make(map[module.MqttTopicKey]pulsar.Consumer)
-	bridgeMq.consumerRoutineContextMap = make(map[module.MqttTopicKey]*consume.RoutineContext)
 	return bridgeMq, nil
 
 }
@@ -174,8 +172,7 @@ func (p *pulsarBridgeMq) handleSubscribe(e *bridge.Elements, mqttSessionKey modu
 			return err
 		} else {
 			p.consumerMap[mqttTopicKey] = consumer
-			routineContext := consume.StartConsumeRoutine(mqttTopicKey, consumer)
-			p.consumerRoutineContextMap[mqttTopicKey] = routineContext
+			consume.StartConsumeRoutine(mqttTopicKey, consumer)
 			p.sessionConsumerMap[mqttSessionKey] = append(p.sessionConsumerMap[mqttSessionKey], mqttTopicKey)
 		}
 	}
@@ -297,11 +294,6 @@ func (p *pulsarBridgeMq) closeProducer(mqttTopicKey module.MqttTopicKey) {
 }
 
 func (p *pulsarBridgeMq) closeConsumer(mqttTopicKey module.MqttTopicKey) {
-	routineContext := p.consumerRoutineContextMap[mqttTopicKey]
-	if routineContext != nil {
-		consume.StopConsumeRoutine(routineContext)
-	}
-	p.consumerRoutineContextMap[mqttTopicKey] = nil
 	consumer := p.consumerMap[mqttTopicKey]
 	if consumer != nil {
 		go func() {
