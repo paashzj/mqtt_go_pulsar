@@ -36,10 +36,15 @@ import (
 
 type Broker struct {
 	mqttBroker *broker.Broker
+	bridgeMq   *PulsarBridgeMq
 }
 
 func (b *Broker) DisConnClientByClientId(clientId string) {
 	b.mqttBroker.DisConnClientByClientId(clientId)
+}
+
+func (b *Broker) Close() {
+	b.bridgeMq.Close()
 }
 
 func RunFront(config *conf.Config, impl Server) (err error) {
@@ -79,10 +84,11 @@ func Run(config *conf.Config, impl Server) (b *Broker, err error) {
 	mqttConfig.Port = strconv.Itoa(config.MqttConfig.Port)
 	clientOptions := pulsar.ClientOptions{}
 	clientOptions.URL = fmt.Sprintf("pulsar://%s:%d", config.PulsarConfig.Host, config.PulsarConfig.TcpPort)
-	mqttConfig.Plugin.Bridge, err = newPulsarBridgeMq(config.MqttConfig, config.PulsarConfig, clientOptions, impl, tracer)
+	bridgeMq, err := newPulsarBridgeMq(config.MqttConfig, config.PulsarConfig, clientOptions, impl, tracer)
 	if err != nil {
 		return nil, err
 	}
+	mqttConfig.Plugin.Bridge = bridgeMq
 	mqttConfig.Plugin.Auth = newPulsarAuthMq(impl)
 	newBroker, err := broker.NewBroker(mqttConfig)
 	if err != nil {
@@ -90,7 +96,7 @@ func Run(config *conf.Config, impl Server) (b *Broker, err error) {
 	}
 	newBroker.Start()
 	service.SetMqttBroker(newBroker)
-	return &Broker{mqttBroker: newBroker}, nil
+	return &Broker{mqttBroker: newBroker, bridgeMq: bridgeMq}, nil
 }
 
 func prometheusHandler() gin.HandlerFunc {

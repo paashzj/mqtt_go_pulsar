@@ -36,7 +36,8 @@ import (
 // - mqtt consumer check message
 func TestMqttConsumer(t *testing.T) {
 	setupPulsar()
-	_, port := setupMqsar()
+	broker, port := setupMqsar()
+	defer broker.Close()
 	pulsarClient, err := pulsar.NewClient(pulsar.ClientOptions{
 		URL: "pulsar://localhost:6650",
 	})
@@ -98,7 +99,8 @@ func TestMqttConsumer(t *testing.T) {
 // - mqtt test consumer msg
 func TestMqttRetrySubscribeAfterDisconnect(t *testing.T) {
 	setupPulsar()
-	_, port := setupMqsar()
+	broker, port := setupMqsar()
+	defer broker.Close()
 	pulsarClient, err := pulsar.NewClient(pulsar.ClientOptions{
 		URL: "pulsar://localhost:6650",
 	})

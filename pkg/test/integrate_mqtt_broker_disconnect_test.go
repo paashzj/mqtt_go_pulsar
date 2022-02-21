@@ -27,6 +27,7 @@ import (
 func TestMqttBrokerDisconnect(t *testing.T) {
 	setupPulsar()
 	broker, port := setupMqsar()
+	defer broker.Close()
 	ops := mqtt.NewClientOptions().SetUsername("username").SetClientID("foo").SetAutoReconnect(false).AddBroker(MqttConnAddr(port))
 	mqttCli := mqtt.NewClient(ops)
 	token := mqttCli.Connect()

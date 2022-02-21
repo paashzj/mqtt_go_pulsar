@@ -28,7 +28,8 @@ import (
 
 func TestMqttProduceQos0(t *testing.T) {
 	setupPulsar()
-	_, port := setupMqsar()
+	broker, port := setupMqsar()
+	defer broker.Close()
 	pulsarClient, err := pulsar.NewClient(pulsar.ClientOptions{
 		URL: "pulsar://localhost:6650",
 	})
