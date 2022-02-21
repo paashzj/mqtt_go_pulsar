@@ -35,7 +35,7 @@ import (
 	"time"
 )
 
-type pulsarBridgeMq struct {
+type PulsarBridgeMq struct {
 	mqttConfig         conf.MqttConfig
 	pulsarConfig       conf.PulsarConfig
 	pulsarClient       pulsar.Client
@@ -50,7 +50,7 @@ type pulsarBridgeMq struct {
 	tracer             *sky.NoErrorTracer
 }
 
-func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, options pulsar.ClientOptions, impl Server, tracer *sky.NoErrorTracer) (bridge.BridgeMQ, error) {
+func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, options pulsar.ClientOptions, impl Server, tracer *sky.NoErrorTracer) (*PulsarBridgeMq, error) {
 	client, err := pulsar.NewClient(options)
 	if err != nil {
 		return nil, err
@@ -64,16 +64,15 @@ func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, o
 			return nil, err
 		}
 	}
-	bridgeMq := &pulsarBridgeMq{mqttConfig: config, pulsarConfig: pulsarConfig, pulsarClient: client, server: impl, pool: pool, tracer: tracer}
+	bridgeMq := &PulsarBridgeMq{mqttConfig: config, pulsarConfig: pulsarConfig, pulsarClient: client, server: impl, pool: pool, tracer: tracer}
 	bridgeMq.sessionProducerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.sessionConsumerMap = make(map[module.MqttSessionKey][]module.MqttTopicKey)
 	bridgeMq.producerMap = make(map[module.MqttTopicKey]pulsar.Producer)
 	bridgeMq.consumerMap = make(map[module.MqttTopicKey]pulsar.Consumer)
 	return bridgeMq, nil
-
 }
 
-func (p *pulsarBridgeMq) Close() {
+func (p *PulsarBridgeMq) Close() {
 	p.closed.Store(true)
 	p.mutex.Lock()
 	defer p.mutex.Unlock()
@@ -87,7 +86,7 @@ func (p *pulsarBridgeMq) Close() {
 	}
 }
 
-func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
+func (p *PulsarBridgeMq) Publish(e *bridge.Elements) error {
 	if p.closed.Load() {
 		return errors.New("mqtt broker has been closed")
 	}
@@ -111,7 +110,7 @@ func (p *pulsarBridgeMq) Publish(e *bridge.Elements) error {
 	return nil
 }
 
-func (p *pulsarBridgeMq) handleConnect(mqttSessionKey module.MqttSessionKey) {
+func (p *PulsarBridgeMq) handleConnect(mqttSessionKey module.MqttSessionKey) {
 	p.mutex.Lock()
 	consumerKey := p.sessionConsumerMap[mqttSessionKey]
 	if len(consumerKey) != 0 {
@@ -130,14 +129,14 @@ func (p *pulsarBridgeMq) handleConnect(mqttSessionKey module.MqttSessionKey) {
 	p.mutex.Unlock()
 }
 
-func (p *pulsarBridgeMq) handleDisconnect(mqttSessionKey module.MqttSessionKey) {
+func (p *PulsarBridgeMq) handleDisconnect(mqttSessionKey module.MqttSessionKey) {
 	p.mutex.Lock()
 	// no topic information when close session
 	p.closeSession(mqttSessionKey)
 	p.mutex.Unlock()
 }
 
-func (p *pulsarBridgeMq) closeSession(mqttSessionKey module.MqttSessionKey) {
+func (p *PulsarBridgeMq) closeSession(mqttSessionKey module.MqttSessionKey) {
 	logrus.Infof("begin to close mqtt session. user: %s", mqttSessionKey.Username)
 	producers := p.sessionProducerMap[mqttSessionKey]
 	for _, producer := range producers {
@@ -151,7 +150,7 @@ func (p *pulsarBridgeMq) closeSession(mqttSessionKey module.MqttSessionKey) {
 	p.sessionConsumerMap[mqttSessionKey] = nil
 }
 
-func (p *pulsarBridgeMq) handleSubscribe(e *bridge.Elements, mqttSessionKey module.MqttSessionKey) error {
+func (p *PulsarBridgeMq) handleSubscribe(e *bridge.Elements, mqttSessionKey module.MqttSessionKey) error {
 	mqttTopicKey := module.MqttTopicKey{
 		MqttSessionKey: mqttSessionKey,
 		Topic:          e.Topic,
@@ -180,7 +179,7 @@ func (p *pulsarBridgeMq) handleSubscribe(e *bridge.Elements, mqttSessionKey modu
 	return nil
 }
 
-func (p *pulsarBridgeMq) handleUnsubscribe(e *bridge.Elements, mqttSessionKey module.MqttSessionKey) {
+func (p *PulsarBridgeMq) handleUnsubscribe(e *bridge.Elements, mqttSessionKey module.MqttSessionKey) {
 	logrus.Infof("begin to unsubscribe mqtt topic: %s", e.Topic)
 	mqttTopicKey := module.MqttTopicKey{
 		MqttSessionKey: mqttSessionKey,
@@ -191,7 +190,7 @@ func (p *pulsarBridgeMq) handleUnsubscribe(e *bridge.Elements, mqttSessionKey mo
 	p.mutex.Unlock()
 }
 
-func (p *pulsarBridgeMq) handlePublish(e *bridge.Elements, mqttSessionKey module.MqttSessionKey) error {
+func (p *PulsarBridgeMq) handlePublish(e *bridge.Elements, mqttSessionKey module.MqttSessionKey) error {
 	mqttTopicKey := module.MqttTopicKey{
 		MqttSessionKey: mqttSessionKey,
 		Topic:          e.Topic,
@@ -282,7 +281,7 @@ func (p *pulsarBridgeMq) handlePublish(e *bridge.Elements, mqttSessionKey module
 	return nil
 }
 
-func (p *pulsarBridgeMq) closeProducer(mqttTopicKey module.MqttTopicKey) {
+func (p *PulsarBridgeMq) closeProducer(mqttTopicKey module.MqttTopicKey) {
 	producer := p.producerMap[mqttTopicKey]
 	if producer != nil {
 		go func() {
@@ -293,7 +292,7 @@ func (p *pulsarBridgeMq) closeProducer(mqttTopicKey module.MqttTopicKey) {
 	p.producerMap[mqttTopicKey] = nil
 }
 
-func (p *pulsarBridgeMq) closeConsumer(mqttTopicKey module.MqttTopicKey) {
+func (p *PulsarBridgeMq) closeConsumer(mqttTopicKey module.MqttTopicKey) {
 	consumer := p.consumerMap[mqttTopicKey]
 	if consumer != nil {
 		go func() {
