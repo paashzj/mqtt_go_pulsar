@@ -28,11 +28,15 @@ import (
 	"github.com/sirupsen/logrus"
 	v3 "skywalking.apache.org/repo/goapi/collect/language/agent/v3"
 	"strings"
+	"sync"
 )
 
 const (
 	ConsumerClosed = "consumer closed"
 )
+
+var msgId = uint16(0)
+var mutex sync.Mutex
 
 func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer, tracer *sky.NoErrorTracer, consumerTopic string) {
 	go func() {
@@ -63,6 +67,7 @@ func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer,
 			publishPacket.Qos = broker.QosAtLeastOnce
 			publishPacket.Retain = false
 			publishPacket.Dup = false
+			publishPacket.MessageID = getMsgId()
 			mqttBroker.PublishMessage(publishPacket)
 			consumer.Ack(receiveMsg)
 			if spanErr == nil {
@@ -70,4 +75,14 @@ func StartConsumeRoutine(topicKey module.MqttTopicKey, consumer pulsar.Consumer,
 			}
 		}
 	}()
+}
+
+func getMsgId() uint16 {
+	mutex.Lock()
+	if msgId >= 65535 {
+		msgId = 0
+	}
+	msgId++
+	mutex.Unlock()
+	return msgId
 }
