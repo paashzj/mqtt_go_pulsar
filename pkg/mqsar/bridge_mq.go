@@ -204,25 +204,28 @@ func (p *PulsarBridgeMq) handlePublish(e *bridge.Elements, mqttSessionKey module
 			logrus.Error("get produce topic failed ", err)
 			return err
 		} else {
-			producerOptions := pulsar.ProducerOptions{}
-			producerOptions.DisableBatching = p.pulsarConfig.ProduceConfig.DisableBatching
-			producerOptions.SendTimeout = p.pulsarConfig.ProduceConfig.SendTimeout
-			producerOptions.BatchingMaxPublishDelay = p.pulsarConfig.ProduceConfig.BatchingMaxPublishDelay
-			producerOptions.MaxPendingMessages = p.pulsarConfig.ProduceConfig.MaxPendingMessages
-			producerOptions.DisableBlockIfQueueFull = true
-			producerOptions.Topic = produceTopic
-			logrus.Infof("begin to create producer. mqttTopic : %s, topic : %s", e.Topic, produceTopic)
-			producer, err := p.pulsarClient.CreateProducer(producerOptions)
-			if err != nil {
-				logrus.Error("create produce failed ", err)
-				return err
-			} else {
-				p.mutex.Lock()
-				p.producerMap[mqttTopicKey] = producer
-				p.sessionProducerMap[mqttSessionKey] = append(p.sessionProducerMap[mqttSessionKey], mqttTopicKey)
-				p.mutex.Unlock()
-				aux = producer
+			p.mutex.Lock()
+			aux = p.producerMap[mqttTopicKey]
+			if aux == nil {
+				producerOptions := pulsar.ProducerOptions{}
+				producerOptions.DisableBatching = p.pulsarConfig.ProduceConfig.DisableBatching
+				producerOptions.SendTimeout = p.pulsarConfig.ProduceConfig.SendTimeout
+				producerOptions.BatchingMaxPublishDelay = p.pulsarConfig.ProduceConfig.BatchingMaxPublishDelay
+				producerOptions.MaxPendingMessages = p.pulsarConfig.ProduceConfig.MaxPendingMessages
+				producerOptions.DisableBlockIfQueueFull = true
+				producerOptions.Topic = produceTopic
+				logrus.Infof("begin to create producer. mqttTopic : %s, topic : %s", e.Topic, produceTopic)
+				producer, err := p.pulsarClient.CreateProducer(producerOptions)
+				if err != nil {
+					logrus.Error("create produce failed ", err)
+					return err
+				} else {
+					p.producerMap[mqttTopicKey] = producer
+					p.sessionProducerMap[mqttSessionKey] = append(p.sessionProducerMap[mqttSessionKey], mqttTopicKey)
+					aux = producer
+				}
 			}
+			p.mutex.Unlock()
 		}
 	}
 	producerMessage := pulsar.ProducerMessage{}
