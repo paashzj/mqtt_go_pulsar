@@ -39,11 +39,22 @@ type Broker struct {
 	bridgeMq   *PulsarBridgeMq
 }
 
+func (b *Broker) DisConnClient() {
+	b.bridgeMq.mutex.Lock()
+	producerMap := b.bridgeMq.sessionProducerMap
+	b.bridgeMq.mutex.Unlock()
+	for key := range producerMap {
+		clientId := key.ClientId
+		b.mqttBroker.DisConnClientByClientId(clientId)
+	}
+}
+
 func (b *Broker) DisConnClientByClientId(clientId string) {
 	b.mqttBroker.DisConnClientByClientId(clientId)
 }
 
 func (b *Broker) Close() {
+	b.DisConnClient()
 	b.bridgeMq.Close()
 }
 
