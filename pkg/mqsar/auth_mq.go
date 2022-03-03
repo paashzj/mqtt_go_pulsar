@@ -24,16 +24,22 @@ import (
 )
 
 type pulsarAuthMq struct {
-	server Server
+	server   Server
+	bridgeMq *PulsarBridgeMq
 }
 
-func newPulsarAuthMq(server Server) auth.Auth {
+func newPulsarAuthMq(server Server, bridgeMq *PulsarBridgeMq) auth.Auth {
 	return &pulsarAuthMq{
-		server: server,
+		server:   server,
+		bridgeMq: bridgeMq,
 	}
 }
 
 func (auth *pulsarAuthMq) CheckACL(action, clientID, username, ip, topic string) bool {
+	if auth.bridgeMq.closed.Load() {
+		logrus.Errorf("broker is closed. username: %s, clientId: %s", username, clientID)
+		return false
+	}
 	switch action {
 	case broker.PUB:
 		_, err := auth.server.MqttProduceTopic(username, clientID, topic)
@@ -50,6 +56,10 @@ func (auth *pulsarAuthMq) CheckACL(action, clientID, username, ip, topic string)
 }
 
 func (auth *pulsarAuthMq) CheckConnect(clientID, username, password string) bool {
+	if auth.bridgeMq.closed.Load() {
+		logrus.Errorf("broker is closed. username: %s, clientId: %s", username, clientID)
+		return false
+	}
 	mqttAuth, err := auth.server.MqttAuth(username, password, clientID)
 	if err != nil {
 		logrus.Error("check mqtt authentication failed ", err)

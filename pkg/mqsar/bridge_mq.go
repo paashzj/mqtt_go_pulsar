@@ -72,8 +72,21 @@ func newPulsarBridgeMq(config conf.MqttConfig, pulsarConfig conf.PulsarConfig, o
 	return bridgeMq, nil
 }
 
-func (p *PulsarBridgeMq) Close() {
+func (p *PulsarBridgeMq) PreClose() {
 	p.closed.Store(true)
+}
+
+func (p *PulsarBridgeMq) Close() {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+	for topicKey, producer := range p.producerMap {
+		logrus.Info("producer closed ", topicKey)
+		producer.Close()
+	}
+	for topicKey, consumer := range p.consumerMap {
+		logrus.Info("consumer closed ", topicKey)
+		consumer.Close()
+	}
 }
 
 func (p *PulsarBridgeMq) Publish(e *bridge.Elements) error {
