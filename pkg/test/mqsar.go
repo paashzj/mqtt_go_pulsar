@@ -42,6 +42,9 @@ func setupMqsarInternal(port int) (*mqsar.Broker, error) {
 	config.PulsarConfig.Host = "localhost"
 	config.PulsarConfig.HttpPort = 8080
 	config.PulsarConfig.TcpPort = 6650
+	config.TraceConfig = conf.TraceConfig{
+		DisableTracing: true,
+	}
 	mqsarImpl := &MqsarImpl{}
 	return mqsar.Run(config, mqsarImpl)
 }

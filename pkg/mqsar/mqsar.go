@@ -54,8 +54,13 @@ func (b *Broker) DisConnClientByClientId(clientId string) {
 }
 
 func (b *Broker) Close() {
+	b.bridgeMq.PreClose()
 	b.DisConnClient()
 	b.bridgeMq.Close()
+}
+
+func (b *Broker) IsClosing() bool {
+	return b.bridgeMq.closed.Load()
 }
 
 func RunFront(config *conf.Config, impl Server) (err error) {
@@ -100,7 +105,7 @@ func Run(config *conf.Config, impl Server) (b *Broker, err error) {
 		return nil, err
 	}
 	mqttConfig.Plugin.Bridge = bridgeMq
-	mqttConfig.Plugin.Auth = newPulsarAuthMq(impl)
+	mqttConfig.Plugin.Auth = newPulsarAuthMq(impl, bridgeMq)
 	newBroker, err := broker.NewBroker(mqttConfig)
 	if err != nil {
 		return nil, err
