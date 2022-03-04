@@ -162,6 +162,7 @@ func (p *PulsarBridgeMq) handleSubscribe(e *bridge.Elements, mqttSessionKey modu
 	consumeTopic, err := p.server.MqttConsumeTopic(e.Username, e.ClientID, e.Topic)
 	if err != nil {
 		logrus.Error("get consumer topic failed ", err)
+		p.mutex.Unlock()
 		return err
 	} else {
 		consumeOptions := pulsar.ConsumerOptions{}
@@ -171,6 +172,7 @@ func (p *PulsarBridgeMq) handleSubscribe(e *bridge.Elements, mqttSessionKey modu
 		consumer, err := p.pulsarClient.Subscribe(consumeOptions)
 		if err != nil {
 			logrus.Error("create consumer failed ", err)
+			p.mutex.Unlock()
 			return err
 		} else {
 			p.consumerMap[mqttTopicKey] = consumer
@@ -221,6 +223,7 @@ func (p *PulsarBridgeMq) handlePublish(e *bridge.Elements, mqttSessionKey module
 				producer, err := p.pulsarClient.CreateProducer(producerOptions)
 				if err != nil {
 					logrus.Error("create produce failed ", err)
+					p.mutex.Unlock()
 					return err
 				} else {
 					p.producerMap[mqttTopicKey] = producer
