@@ -33,3 +33,7 @@ func (e ExampleMqsarImpl) MqttProduceTopic(username, clientId, topic string) (st
 func (e ExampleMqsarImpl) MqttConsumeTopic(username, clientId, topic string) (string, error) {
 	return fmt.Sprintf("persistent://public/default/%s", topic), nil
 }
+
+func (e ExampleMqsarImpl) MqttDisConnect(username, clientId, topic string) (bool, error) {
+	return true, nil
+}

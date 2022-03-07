@@ -38,6 +38,10 @@ func (m MqsarImpl) MqttProduceTopic(username, clientId, topic string) (string, e
 	return mqttProduceTopic(topic), nil
 }
 
+func (e MqsarImpl) MqttDisConnect(username, clientId, topic string) (bool, error) {
+	return true, nil
+}
+
 func mqttProduceTopic(topic string) string {
 	return fmt.Sprintf("persistent://public/default/%s", topic)
 }

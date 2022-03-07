@@ -100,7 +100,7 @@ func (p *PulsarBridgeMq) Publish(e *bridge.Elements) error {
 	if e.Action == bridge.Connect {
 		p.handleConnect(mqttSessionKey)
 	} else if e.Action == bridge.Disconnect {
-		p.handleDisconnect(mqttSessionKey)
+		p.handleDisconnect(e, mqttSessionKey)
 	} else if e.Action == bridge.Subscribe {
 		return p.handleSubscribe(e, mqttSessionKey)
 	} else if e.Action == bridge.Unsubscribe {
@@ -132,7 +132,11 @@ func (p *PulsarBridgeMq) handleConnect(mqttSessionKey module.MqttSessionKey) {
 	p.mutex.Unlock()
 }
 
-func (p *PulsarBridgeMq) handleDisconnect(mqttSessionKey module.MqttSessionKey) {
+func (p *PulsarBridgeMq) handleDisconnect(e *bridge.Elements, mqttSessionKey module.MqttSessionKey) {
+	disconnect, err := p.server.MqttDisConnect(e.Username, e.ClientID, e.Topic)
+	if err != nil || !disconnect {
+		logrus.Error("mqtt disconnect callback handle error. err: %s", err)
+	}
 	p.mutex.Lock()
 	// no topic information when close session
 	p.closeSession(mqttSessionKey)
