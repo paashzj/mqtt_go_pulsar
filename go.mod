@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/SkyAPM/go2sky v1.3.0
-	github.com/apache/pulsar-client-go v0.8.0
+	github.com/apache/pulsar-client-go v0.8.1
 	github.com/docker/docker v20.10.12+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/eclipse/paho.mqtt.golang v1.3.5
