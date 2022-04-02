@@ -3,7 +3,7 @@ module github.com/paashzj/mqtt_go_pulsar
 go 1.17
 
 require (
-	github.com/SkyAPM/go2sky v1.4.0
+	github.com/SkyAPM/go2sky v1.4.1
 	github.com/apache/pulsar-client-go v0.8.1
 	github.com/docker/docker v20.10.14+incompatible
 	github.com/docker/go-connections v0.4.0
@@ -17,7 +17,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.1
 	go.uber.org/atomic v1.9.0
-	skywalking.apache.org/repo/goapi v0.0.0-20220121092418-9c455d0dda3f
+	skywalking.apache.org/repo/goapi v0.0.0-20220401015832-2c9eee9481eb
 )
 
 require (
@@ -96,7 +96,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220208230804-65c12eb4c068 // indirect
 	google.golang.org/grpc v1.44.0 // indirect
-	google.golang.org/protobuf v1.27.1 // indirect
+	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
 )
