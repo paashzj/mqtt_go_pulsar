@@ -7,7 +7,7 @@ require (
 	github.com/apache/pulsar-client-go v0.8.1
 	github.com/docker/docker v20.10.16+incompatible
 	github.com/docker/go-connections v0.4.0
-	github.com/eclipse/paho.mqtt.golang v1.3.5
+	github.com/eclipse/paho.mqtt.golang v1.4.1
 	github.com/fhmq/hmq v0.0.0-20220119031624-bf2b91c535a8
 	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-gonic/gin v1.8.1
@@ -93,6 +93,7 @@ require (
 	golang.org/x/crypto v0.0.0-20220126234351-aa10faf2a1f8 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/oauth2 v0.0.0-20210514164344-f6687ab2804c // indirect
+	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c // indirect
 	golang.org/x/sys v0.0.0-20220207234003-57398862261d // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
