@@ -15,7 +15,7 @@ require (
 	github.com/panjf2000/ants/v2 v2.5.0
 	github.com/prometheus/client_golang v1.12.2
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.1
+	github.com/stretchr/testify v1.7.2
 	go.uber.org/atomic v1.9.0
 	skywalking.apache.org/repo/goapi v0.0.0-20220401015832-2c9eee9481eb
 )
@@ -102,6 +102,6 @@ require (
 	google.golang.org/grpc v1.44.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.0.3 // indirect
 )
