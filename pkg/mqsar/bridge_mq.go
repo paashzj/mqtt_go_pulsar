@@ -89,9 +89,9 @@ func (p *PulsarBridgeMq) Close() {
 	}
 }
 
-func (p *PulsarBridgeMq) Publish(e *bridge.Elements) error {
+func (p *PulsarBridgeMq) Publish(e *bridge.Elements) (bool, error) {
 	if p.closed.Load() {
-		return errors.New("mqtt broker has been closed")
+		return false, errors.New("mqtt broker has been closed")
 	}
 	mqttSessionKey := module.MqttSessionKey{
 		Username: e.Username,
@@ -102,15 +102,15 @@ func (p *PulsarBridgeMq) Publish(e *bridge.Elements) error {
 	} else if e.Action == bridge.Disconnect {
 		p.handleDisconnect(mqttSessionKey)
 	} else if e.Action == bridge.Subscribe {
-		return p.handleSubscribe(e, mqttSessionKey)
+		return false, p.handleSubscribe(e, mqttSessionKey)
 	} else if e.Action == bridge.Unsubscribe {
 		p.handleUnsubscribe(e, mqttSessionKey)
 	} else if e.Action == bridge.Publish {
-		return p.handlePublish(e, mqttSessionKey)
+		return true, p.handlePublish(e, mqttSessionKey)
 	} else {
 		logrus.Warn("Unsupported action ", e.Action)
 	}
-	return nil
+	return false, nil
 }
 
 func (p *PulsarBridgeMq) handleConnect(mqttSessionKey module.MqttSessionKey) {
