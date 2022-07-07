@@ -9,7 +9,7 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/eclipse/paho.mqtt.golang v1.4.1
 	github.com/fhmq/hmq v0.0.0-20220520132748-5dc2114daf90
-	github.com/gin-contrib/pprof v1.3.0
+	github.com/gin-contrib/pprof v1.4.0
 	github.com/gin-gonic/gin v1.8.1
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/panjf2000/ants/v2 v2.5.0
