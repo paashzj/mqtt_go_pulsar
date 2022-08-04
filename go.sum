@@ -54,8 +54,8 @@ github.com/Shopify/sarama v1.32.0 h1:P+RUjEaRU0GMMbYexGMDyrMkLhbbBVUVISDywi+IlFU
 github.com/Shopify/sarama v1.32.0/go.mod h1:+EmJJKZWVT/faR9RcOxJerP+LId4iWdQPBGLy1Y1Njs=
 github.com/Shopify/toxiproxy/v2 v2.3.0 h1:62YkpiP4bzdhKMH+6uC5E95y608k3zDwdzuBMsnn3uQ=
 github.com/Shopify/toxiproxy/v2 v2.3.0/go.mod h1:KvQTtB6RjCJY4zqNJn7C7JDFgsG5uoHYDirfUfpIm0c=
-github.com/SkyAPM/go2sky v1.4.1 h1:FV0jUB8UeC5CW0Z12j8xgrK0LoVV85Z92ShQU0G3Xfo=
-github.com/SkyAPM/go2sky v1.4.1/go.mod h1:cebzbFtq5oc9VrgJy0Sv7oePj/TjIlXPdj2ntHdCXd0=
+github.com/SkyAPM/go2sky v1.5.0 h1:TzhKL9IyVCegCUdcqRI7R7g+rQCYNnF6QAzp6IhDy08=
+github.com/SkyAPM/go2sky v1.5.0/go.mod h1:cebzbFtq5oc9VrgJy0Sv7oePj/TjIlXPdj2ntHdCXd0=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
 github.com/alecthomas/units v0.0.0-20151022065526-2efee857e7cf/go.mod h1:ybxpYRFXyAe+OPACYpWeL0wqObRcbAqCMya13uyzqw0=

@@ -3,7 +3,7 @@ module github.com/paashzj/mqtt_go_pulsar
 go 1.17
 
 require (
-	github.com/SkyAPM/go2sky v1.4.1
+	github.com/SkyAPM/go2sky v1.5.0
 	github.com/apache/pulsar-client-go v0.8.1
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/docker/go-connections v0.4.0
